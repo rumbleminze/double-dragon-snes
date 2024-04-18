@@ -17,29 +17,26 @@
 
 .include "bank-snes.asm"
 ; these would need to be uncommented
-; .include "bank0.asm"
-; .include "bank1.asm"
-; .include "bank2.asm"
-; .include "bank3.asm"
-; .include "bank4.asm"
-; .include "bank5.asm"
-; .include "bank6.asm"
+.include "bank0.asm"
+.include "bank1.asm"
+.include "bank2.asm"
+.include "bank3.asm"
+.include "bank4.asm"
+.include "bank5.asm"
+.include "bank6.asm"
 
-; .include "chrom-tiles-0.asm"
-; .include "chrom-tiles-1.asm"
-; .include "chrom-tiles-2.asm"
-; .include "chrom-tiles-3.asm"
-; .include "chrom-tiles-4.asm"
-; .include "chrom-tiles-5.asm"
-; .include "chrom-tiles-6.asm"
-; .include "chrom-tiles-7.asm"
-; .include "chrom-basic-intro-tiles.asm"
-
+.include "chrom-tiles-0.asm"
+.include "chrom-tiles-1.asm"
+.include "chrom-tiles-2.asm"
+.include "chrom-tiles-3.asm"
+.include "chrom-tiles-4.asm"
+.include "chrom-tiles-5.asm"
+.include "chrom-tiles-6.asm"
+.include "chrom-tiles-7.asm"
+.include "chrom-basic-intro-tiles.asm"
 
 .if ENABLE_MSU = 1
     .include "msu.asm"
-.endif
     .include "chrom-tiles-msu-intro.asm"
-.if ENABLE_MSU = 1
     .include "msu_video_player.asm"
 .endif

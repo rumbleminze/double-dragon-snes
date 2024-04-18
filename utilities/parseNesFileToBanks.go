@@ -23,7 +23,7 @@ import (
 //
 // with 16 bytes per line
 func main() {
-	inputFile := flag.String("in", "Chip 'n Dale Rescue Rangers (U) [!].nes", "input file to split out")
+	inputFile := flag.String("in", "Double Dragon (U).nes", "input file to split out")
 
 	inputBytes, _ := ioutil.ReadFile(*inputFile)
 	var banks [][]byte
@@ -49,8 +49,9 @@ func main() {
 
 		var bankFile, _ = os.Create(fmt.Sprintf("bank%d.asm", i))
 		defer bankFile.Close()
-
-		bankFile.WriteString(fmt.Sprintf(".segment \"PRGA%d\"", i+1))
+		if i != 7 {
+			bankFile.WriteString(fmt.Sprintf(".segment \"PRGA%d\"", i+1))
+		}
 		bankFile.WriteString(fmt.Sprintf("; Bank %d\n", i))
 		for byteIndex := 0; byteIndex < len(banks[i]); byteIndex++ {
 			if byteIndex <= 0x1FFFF {
@@ -70,12 +71,14 @@ func main() {
 				}
 			}
 		}
-		bankFile.WriteString(fmt.Sprintf(
-			".segment \"PRGA%dC\"\nfixeda%d:\n.include \"bank7.asm\"\nfixeda%d_end:",
-			i+1, i+1, i+1,
-		))
+		if i != 7 {
+			bankFile.WriteString(fmt.Sprintf(
+				".segment \"PRGA%dC\"\nfixeda%d:\n.include \"bank7.asm\"\nfixeda%d_end:",
+				i+1, i+1, i+1,
+			))
+		}
 	}
-	// CHR banks
+	// CHR banks 8 - 15
 	tileset := 0
 	for i := 8; i < 16; i++ {
 		var bankFile, _ = os.Create(fmt.Sprintf("chrom-tiles-%d.asm", i-8))
@@ -87,7 +90,6 @@ func main() {
 				tileset++
 			}
 
-			// if i < 14 || (byteIndex < 0x2000 && i == 14) {
 			// converts these to SNES expected format
 			bankFile.WriteString(
 				fmt.Sprintf(
@@ -112,6 +114,8 @@ func main() {
 				),
 			)
 			bankFile.WriteString(".byte $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00\n")
+			// If some of the banks in the PRG rom are actually data banks, then we need to _not_ format them at 4bpp.
+			// for Double Dragon all of the banks are just tile data.
 			// } else {
 			// 	// these are data banks that need to be formatted differently
 			// 	bankFile.WriteString(

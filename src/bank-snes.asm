@@ -202,19 +202,22 @@ intro_done:
   STZ CGADSUB
   
   JSR setup_hide_left_8_pixel_window
-  JSL disable_hide_left_8_pixel_window
-  JSR clearvm_to_12
+  JSL show_left_8_pixel_window
+  JSR clear_bg_vm
   JSR write_default_palettes
-  JSR write_stack_adjustment_routine_to_ram
-  JSR write_sound_hijack_routine_to_ram
+  JSR write_default_tilesets
+  ; JSR write_stack_adjustment_routine_to_ram
+  ; JSR write_sound_hijack_routine_to_ram
 
   LDA #$A1
   PHA
   PLB 
-  JML $A1FFE0
+  JML $A1FFE8
 
 
   snes_nmi:
+
+
     LDA RDNMI 
     
     jslb update_values_for_ppu_mask, $a0
@@ -317,34 +320,74 @@ clearvm:
   STA VMAIN
   RTS
 
-clearvm_to_12_long:
-  JSR clearvm_to_12
-  RTL
+clear_bg_vm_jsl:
+  jsr clear_bg_vm
+  rtl
+clear_bg_vm:
+  LDA #$80
+  STA VMAIN
 
-clearvm_to_12:
-
-: LDA RDNMI
-  BPL :-
-
-  STZ NMITIMEN
-  jslb force_blank_no_store, $a0 
+  ; fixed A value, increment B
   setAXY16
-  ldx #$2000
-  stx VMADDL 
-	
-	lda #$0000
-	
-	LDY #$0000
-	:
-		sta VMDATAL
-		iny
-		CPY #(32*64)
-		BNE :-
-  
-  setAXY8
-  jslb reset_inidisp, $a0 
 
+  LDA #$0009
+  sta DMAP0
+
+  LDA #$2000
+  STA VMADDL
+
+  LDA #$18
+  STA BBAD0
+
+  LDA #$A0
+  STA A1B0
+
+  setAXY8
+  LDA #>dma_values
+  STA A1T0H
+  LDA #<dma_values
+  STA A1T0L
+  setAXY16
+
+  LDA #$0800
+  STA DAS0L
+
+  LDA #$0001
+  STA MDMAEN
+
+  setAXY8
+  LDA VMAIN_STATE
+  STA VMAIN
   RTS
+
+; clearvm_long:
+;   JSR clearvm
+;   RTL
+
+; clearvm:
+
+; : LDA RDNMI
+;   BPL :-
+
+;   STZ NMITIMEN
+;   jslb force_blank_no_store, $a0 
+;   setAXY16
+;   ldx #$2000
+;   stx VMADDL 
+	
+; 	lda #$0000
+	
+; 	LDY #$0000
+; 	:
+; 		sta VMDATAL
+; 		iny
+; 		CPY #(32*64)
+; 		BNE :-
+  
+;   setAXY8
+;   jslb reset_inidisp, $a0 
+
+;   RTS
 
 clear_zp:
   LDA #$00
@@ -430,6 +473,8 @@ dma_values:
 
 .segment "PRGA0C"
 
+; even though we shouldn't be jumping into the C000+ range in this bank
+; we include it because we look up some things like palettes there
 fixeda0:
 .include "bank7.asm"
 fixeda0_end:

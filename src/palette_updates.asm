@@ -1,5 +1,6 @@
 
 write_palette_data:
+  PHB
   PHX
   PHY
   PHA
@@ -10,16 +11,22 @@ write_palette_data:
   PHA
   PLB
   LDY #$00
-  STZ CURR_PALETTE_ADDR
-  STZ CGADD
-  ; CND stores the current palettes at 0x0300
-  ; BG is 0330 - 033F
-  ; Sprites are 0340 - 034F
+  LDA PALETTE_OFFSET
+  ASL
+  ASL
+  ASL
+  STA PALETTE_OFFSET
+  STA CGADD
+  STA CURR_PALETTE_ADDR
+
+
+  ; DD stores the current palettes at ($02),Y
+
 
   ; lookup our 2 byte color from palette_lookup, color * 2
   ; Our palettes are written by writing to CGDATA
 palette_entry:
-  LDA $0300, Y
+  LDA ($02), Y
   ASL A
   TAX
   LDA palette_lookup, X
@@ -51,20 +58,20 @@ skip_writing_three_rows:
   STA CURR_PALETTE_ADDR 
 
 skip_writing_four_empties:
-  CPY #$20
+  CPY PALETTE_ENTRY_CNT
   BNE palette_entry
 
-  LDA ACTIVE_NES_BANK
-  INC A
-  ORA #$A0
-  PHA
-  PLB
+
   PLA
   PLY  
   PLX
-  ; done after $20
+  PLB
+
   RTL
   
+
+
+
 zero_all_palette:
   LDY #$00
   LDX #$02

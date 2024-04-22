@@ -4,11 +4,18 @@
 
 ; These values are almost always used by NES game, but the values will be different
 ; for each game.  They will almost always be in the zero page, or close to it.
-VOFS_LB             = $FA   ; BG V Scroll position
-HOFS_LB             = $FC   ; BG H Scroll position
-PPU_CONTROL_STATE   = $FF   ; Current state of the PPU Control register
-PPU_MASK_STATE      = $FE   ; Current state of the PPU Mask register
-ACTIVE_NES_BANK     = $F1   ; Current bank loaded into the 8000-BFFF bank (for UNROM and MMC1)
+VOFS_LB             = $FC   ; BG V Scroll position
+HOFS_LB             = $FD   ; BG H Scroll position
+
+PPU_CONTROL_STATE   = $FF   ; Current state of the PPU Control register :check:
+PPU_MASK_STATE      = $FE   ; Current state of the PPU Mask register :check:
+ACTIVE_NES_BANK     = $0104   ; Current bank loaded into the 8000-BFFF bank (for UNROM and MMC1)
+
+BANK_SWITCH_CTRL_REGS           = $0108
+BANK_SWITCH_CTRL_SPRITE_BANK    = $0109
+BANK_SWITCH_CTRL_BG_BANK        = $010A
+
+
 
 ; these happen to be used in my last port
 BG_SCREEN_INDEX     = $FD
@@ -26,6 +33,9 @@ ACTIVE_BG1_BANK     = $69
 ; for SNES we also need to store the HB
 HOFS_HB             = $08A4
 VOFS_HB             = $08A5
+
+PALETTE_ENTRY_CNT   = $08A6
+PALETTE_OFFSET      = $08A7
 
 REUSABLE_CALC_BYTE  = $08A8
 LEVEL_SELECT_INDEX  = $08A9
@@ -62,6 +72,22 @@ BANK_SWITCH_A      = $0965
 STACK_RETURN_LB    = $0966
 STACK_RETURN_HB    = $0967
 STACK_RETURN_DB    = $0968
+
+OBJ_CHR_BANK_SWITCH = $0890
+BG_CHR_BANK_SWITCH  = $0891
+CHR_BANK_CURR_P1    = $0892
+BG_CHR_BANK_CURR    = $0893
+DATA_CHR_BANK_CURR  = $0894
+TARGET_BANK_OFFSET  = $0895
+
+; CHR_BANK_WORK
+CHR_BANK_LOADED_TABLE   = $0910
+CHR_BANK_BANK_TO_LOAD   = $0897
+CHR_BANK_TARGET_BANK    = $0898
+CHR_BANK_NEXT_OBJ_BANK  = $0899
+CHR_BANK_READ_LB        = $089A
+CHR_BANK_READ_HB        = $089B
+CHR_BANK_READ_DB        = $089C
 
 FULL_ATTRIBUTE_QUARTER_COUNTER = $0930
 FAQ_OFFSET = $0931
@@ -176,18 +202,3 @@ ATTR_WORK_BYTE_1 = ATTR_WORK_BYTE_0 + 1
 ATTR_WORK_BYTE_2 = ATTR_WORK_BYTE_0 + 2
 ATTR_WORK_BYTE_3 = ATTR_WORK_BYTE_0 + 3
 
-OBJ_CHR_BANK_SWITCH = $65C0
-BG_CHR_BANK_SWITCH  = $65C1
-CHR_BANK_CURR_P1    = $65C2
-BG_CHR_BANK_CURR    = $65C3
-DATA_CHR_BANK_CURR  = $65C7
-TARGET_BANK_OFFSET  = $65C8
-
-; CHR_BANK_WORK
-CHR_BANK_LOADED_TABLE = $6620
-CHR_BANK_BANK_TO_LOAD = $6610
-CHR_BANK_TARGET_BANK  = $6611
-CHR_BANK_NEXT_OBJ_BANK= $6612
-CHR_BANK_READ_LB    = $65C4
-CHR_BANK_READ_HB    = $65C5
-CHR_BANK_READ_DB    = $65C6

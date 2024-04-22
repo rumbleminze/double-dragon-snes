@@ -7,7 +7,7 @@ setup_hide_left_8_pixel_window:
     LDA #$00
     STA WH0
 
-    LDA #$10
+    LDA #$08
     STA WH1
 
     LDA #%10101010
@@ -20,16 +20,16 @@ setup_hide_left_8_pixel_window:
     STA W12SEL
     STA WOBJSEL
     
-    jslb disable_hide_left_8_pixel_window, $a0
+    jslb show_left_8_pixel_window, $a0
     rts
 
-enable_hide_left_8_pixel_window:
+hide_left_8_pixel_window:
     LDA #%00000010
     STA W12SEL
 
     RTL
 
-disable_hide_left_8_pixel_window:
+show_left_8_pixel_window:
     LDA #$00
     STA W12SEL
     RTL

@@ -404,6 +404,45 @@ dma_chr_to_vm:
 
   RTS
 
+write_default_tilesets:
+    LDA #$00
+    STA CHR_BANK_BANK_TO_LOAD
+    LDA #$00
+    STA CHR_BANK_TARGET_BANK
+    JSL load_chr_table_to_vm
+    
+    LDA #$00
+    STA CHR_BANK_BANK_TO_LOAD
+    LDA #$01
+    STA CHR_BANK_TARGET_BANK
+    JSL load_chr_table_to_vm
+
+    LDA #$01
+    STA CHR_BANK_BANK_TO_LOAD
+    LDA #$04
+    STA CHR_BANK_TARGET_BANK
+    JSL load_chr_table_to_vm
+    
+    LDA #$02
+    STA CHR_BANK_BANK_TO_LOAD
+    LDA #$05
+    STA CHR_BANK_TARGET_BANK
+    JSL load_chr_table_to_vm
+        
+    LDA #$03
+    STA CHR_BANK_BANK_TO_LOAD
+    LDA #$06
+    STA CHR_BANK_TARGET_BANK
+    JSL load_chr_table_to_vm
+        
+    LDA #$04
+    STA CHR_BANK_BANK_TO_LOAD
+    LDA #$07
+    STA CHR_BANK_TARGET_BANK
+    JSL load_chr_table_to_vm
+
+    RTS
+
 ; todo update
 ; which bank we should swap the sprite into, 00 - 0A aren't sprites so we set it to 0
 ; we only use 00, 10, and 11 for sprite locations, which are 00, 04, and 06

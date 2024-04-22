@@ -1,7 +1,7 @@
 .segment "PRGA6"; Bank 5
 
 
-; 8000 - bank 5
+; 8000 - bank 5 - Likely Audio, we'll get to that later
 .byte $4C, $06, $80, $4C, $20, $81, $8D, $00, $07, $A5, $25, $48, $A5, $26, $48, $A5
 .byte $2E, $48, $8A, $48, $98, $48, $AE, $00, $07, $AD, $06, $07, $09, $80, $8D, $06
 .byte $07, $8A, $D0, $3A, $A9, $00, $8D, $15, $40, $EA, $EA, $A9, $1F, $8D, $15, $40

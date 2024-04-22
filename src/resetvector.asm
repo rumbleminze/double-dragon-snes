@@ -14,12 +14,14 @@ JSL $A08000
 ; this needs to be the NES game's reset vector
 JML $A1FFE0
 nmi:
-    PHP
+    ; we abandon these
+    ; PHP
     PHA
     PHX
     PHY
     jslb snes_nmi, $a0
-    
+
+
     ; jump to NES NMI
     CLC
     LDA ACTIVE_NES_BANK
@@ -28,17 +30,21 @@ nmi:
     STA BANK_SWITCH_DB    
     PHA
     PLB
-
-    ; This assume the NES NMI is at $C000
-    LDA #$C0
+    
+    jslb translate_8by8only_nes_sprites_to_oam, $a0
+    ; Double Dragon NMI is at FF16
+    LDA #$ff
     STA BANK_SWITCH_HB
-    LDA #$00
+    LDA #$16
     STA BANK_SWITCH_LB
+
+    PLY
+    PLX
+    PLA
     JML [BANK_SWITCH_LB]
 
 return_from_nes_nmi:
-    ; handle sprite traslation last, since if that bleeds out of vblank it's ok
-    jslb translate_8by8only_nes_sprites_to_oam, $a0
+    ; we likely don't ever end up here
     PLY
     PLX
     PLA

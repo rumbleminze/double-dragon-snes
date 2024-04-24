@@ -109,7 +109,7 @@
 .byte $F1
 
 ; C321
-  LDA #$22 ; #$2B
+  LDA #$2B
   LDX #$02
   jsr @store_vm_add_h_to_range ; STA VMADDH ; PpuAddr_2006
   LDA #$40

@@ -121,12 +121,35 @@
   BNE :-
 
 .byte $A9, $23, $CA, $D0, $E6, $A5
-.byte $3D, $0A, $0A, $05, $3E, $A8, $B9, $F8, $C2, $F0, $56, $20, $5A, $C2, $A9, $23
-.byte $8D, $06, $20, $A9, $F0, $8D, $06, $20, $A2, $30, $A0, $00, $AD, $07, $20, $29
+.byte $3D, $0A, $0A, $05, $3E, $A8, $B9, $F8, $C2, $F0, $56, $20, $5A, $C2
+  
+  ; these next two bits are updating the colors in the HUD.  It's not critcal,
+  ; and actually seems pretty bugged in the original game, since it updates it but
+  ; doesn't use it.
+  LDA #$23
+  STA VMADDH ; $2006
+  LDA #$F0
+  STA VMADDL ; $2006
+  LDX #$30
+  LDY #$00
+  LDA VMDATALREAD ;  $2007
+
+.byte $29
 .byte $0F, $85, $15, $B9, $E4, $04, $29, $F0, $05, $15, $9D, $28, $06, $E8, $C8, $C0
-.byte $08, $D0, $00, $B9, $E4, $04, $9D, $28, $06, $C8, $E8, $C0, $10, $D0, $F4, $A9
-.byte $23, $8D, $06, $20, $A9, $F0, $8D, $06, $20, $A0, $30, $B9, $28, $06, $8D, $07
-.byte $20, $C8, $C0, $40, $D0, $F5, $A9, $06, $20, $EE, $FE, $A9, $00, $20, $F5, $C7
+.byte $08, $D0, $00, $B9, $E4, $04, $9D, $28, $06, $C8, $E8, $C0, $10, $D0, $F4
+
+  LDA #$23
+  STA VMADDL ; $2006
+  LDA #$F0
+  STA VMADDH ; $2006
+  LDY #$30
+: LDA $0628,Y
+  STA VMDATAL ; $2007
+  INY
+  CPY #$40
+  BNE :-
+
+.byte $A9, $06, $20, $EE, $FE, $A9, $00, $20, $F5, $C7
 .byte $60, $20, $91, $C9, $A0, $00, $B9, $DB, $00, $99, $DF, $00, $99, $1C, $00, $C8
 .byte $C0, $04, $D0, $F2, $A5, $1E, $18, $69, $28, $85, $1E, $A5, $1F, $69, $00, $85
 .byte $1F

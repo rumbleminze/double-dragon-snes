@@ -34,32 +34,8 @@ no_scroll_screen_enable:
   STA PPU_CONTROL_STATE
   RTL 
 
-update_screen_scroll:
-  LDA BG_SCREEN_INDEX
-  AND #$01
-  BEQ :+
-  LDA #$01
-  STA HOFS_HB
-
-: STA BG1HOFS
-  LDA HOFS_LB
-  STA BG1HOFS
-
-  LDA BG_SCREEN_INDEX
-  AND #$02
-  BEQ :+
-  LDA #$02
-  STA VOFS_HB
-: STA BG1VOFS
-  LDA VOFS_LB
-  STA BG1VOFS
-
-  RTL
-
 infidelitys_scroll_handling:
-  LDA BG_SCREEN_INDEX
-  AND #$01
-  ORA PPU_CONTROL_STATE
+  LDA PPU_CONTROL_STATE
   PHA 
   AND #$80
   BNE :+
@@ -101,91 +77,129 @@ infidelitys_scroll_handling:
   ; STA VOFS_HB
 : RTL 
 
+default_scrolling_hdma_values:
+.byte $6F, $00, $92, $00, $C9, $58, $00, $92, $00, $C9, $27, $00, $00, $00, $01, $00
+
+set_scrolling_hdma_defaults:
+  PHY
+  PHB
+  LDA #$A0
+  PHA
+  PLB
+  LDY #$00
+: LDA default_scrolling_hdma_values, Y
+  CPY #$0f
+  BEQ :+
+  STA SCROLL_HDMA_START, Y
+  INY
+  BRA :-
+
+: PLB
+  PLY
+  RTL
+
 setup_hdma:
   LDX VOFS_LB
   LDA $A0A080,X
-  STA $0900
+  STA SCROLL_HDMA_START + 0
   LDA $A0A170,X
-  STA $0903
+  STA SCROLL_HDMA_START + 3
   LDA $A0A260,X
-  STA $0905
+  STA SCROLL_HDMA_START + 5
   LDA $A0A350,X
-  STA $0908
+  STA SCROLL_HDMA_START + 8
+    
   LDA $A0A440,X
-  STA $090A
+  STA SCROLL_HDMA_START + 10
   LDA $A0A520,X
-  STA $090D
+  STA SCROLL_HDMA_START + 13
 
   LDA HOFS_LB
-  STA $0901
-  STA $0906
-  STA $090B
-  lda BG_SCREEN_INDEX
-  and #$01
-  ora PPU_CONTROL_STATE
-  STA $0902
-  STA $0907
-  STA $090C
-  lda BG_SCREEN_INDEX
-  and #$01
+  STA SCROLL_HDMA_START + 1
+  STA SCROLL_HDMA_START + 6
+  STA SCROLL_HDMA_START + 11
+  LDA PPU_CONTROL_STATE
+  STA SCROLL_HDMA_START + 2
+  STA SCROLL_HDMA_START + 7
+  STA SCROLL_HDMA_START + 12
   LDX PPU_CONTROL_STATE
-  
   LDA $A0A610,X
-  STA $0904
-  STA $0909
-  STA $090E
-  ; STZ $090B
-  STZ $090F
+  STA SCROLL_HDMA_START + 4
+  STA SCROLL_HDMA_START + 9
+  STA SCROLL_HDMA_START + 14
 
-  RTL
 
-scroll_rollover:
-  LDA #$EF  
-  STA $FD
+  LDY #$0A
+  LDA SCROLL_HDMA_START
+  STA HDMA_LINE_CNT
+  
+  LDA SCROLL_HDMA_START + 5
+  CLC
+  ADC HDMA_LINE_CNT
+  STA HDMA_LINE_CNT
+  SEC
+  SBC #199
 
-  LDA $5C
-  ORA #$80
-  STA $5C
+  BMI :+
+    ; hit the end on 2nd one, back it up
+    STA HDMA_LINE_CNT
+    LDA SCROLL_HDMA_START + 5
+    SEC
+    SBC HDMA_LINE_CNT
+    STA SCROLL_HDMA_START + 5
+    BRA write_hud_values
+  :
 
-  ; we have to update PPU_STORE here because we use it almost immediately
-  ; in the hdma routine
-  JSR flip_bg1_bit
+  LDY #$0F
+  LDA SCROLL_HDMA_START + 10
+  CLC
+  ADC HDMA_LINE_CNT
+  STA HDMA_LINE_CNT
+  SEC
+  SBC #199
+  BMI :+
+    ; hit the end on the 3rd one, back it up
+    STA HDMA_LINE_CNT
+    LDA SCROLL_HDMA_START + 10
+    SEC
+    SBC HDMA_LINE_CNT
+    STA SCROLL_HDMA_START + 10
+    BRA write_hud_values
+  :
+    ; didn't get to enough lines, we actually have to bump up the last one
+    LDA #199
+    SBC HDMA_LINE_CNT
+    ADC SCROLL_HDMA_START + 10
+    STA SCROLL_HDMA_START + 10
 
-  RTL
+write_hud_values:
+  LDA #39 ; 40 lines of 0000, 0100
+  STA SCROLL_HDMA_START, Y
 
-title_screen_rollover:
   LDA #$00
-  STA $14
-  STA $15
-  LDA $1A
+  INY
+  STA SCROLL_HDMA_START, Y
+  INY
+  STA SCROLL_HDMA_START, Y
+
+  INY
+  STA SCROLL_HDMA_START, Y
+
+  ; this controls if we use 2000 or 2400 for the hud source
+  ; we usually use 2400, but if we're scrolling down then we use 2000  
+  LDA $3B
+  AND #$01
   EOR #$01
-  STA $1A
+  
+  INY
+  STA SCROLL_HDMA_START, Y
+
   LDA #$00
-  STA $FD
-  JSR flip_bg1_bit
+  INY
+  STA SCROLL_HDMA_START, Y
+
 
   RTL
-
-flip_bg1_bit:
-  LDA BG_SCREEN_INDEX
-  EOR #$02  
-  STA BG_SCREEN_INDEX
-  RTS
-
-
-handle_horizontal_scroll_wrap:
-  INC $1B
-
-  LDA BG_SCREEN_INDEX
-  EOR #$01
-  STA BG_SCREEN_INDEX
-
-  LDA $5C
-  ORA #$80
-  STA $5C
-
-  RTL
-
 
 ; copy of 02:AC47
 horizontal_attribute_scroll_handle:
@@ -249,12 +263,3 @@ nes_02_ada9_copy:
   ASL A
   ROL $00
   RTS
-
-credits_scroll_rollover:
-  INC $1A
-  LDA #$00
-  STA $FD
-  PHA
-  JSR flip_bg1_bit
-  PLA
-  RTL

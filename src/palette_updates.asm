@@ -1,3 +1,26 @@
+write_8_palette_entries_from_f1b6:
+  LDA $02
+  PHA
+  LDA $03
+  PHA
+
+  LDA #$F1
+  STA $03
+  LDA #$B6
+  STA $02
+
+  LDA #$08
+  STA PALETTE_ENTRY_CNT
+  JSL write_palette_data
+
+  pla
+  STA $03
+  pla
+  sta $02
+
+  rtl
+
+
 
 write_palette_data:
   PHB

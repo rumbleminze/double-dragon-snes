@@ -14,13 +14,13 @@ JSL $A08000
 ; this needs to be the NES game's reset vector
 JML $A1FFE0
 nmi:
-    ; we abandon these
     ; PHP
     PHA
     PHX
     PHY
-    jslb snes_nmi, $a0
 
+    ; sometimes the NES doesn't RTI, so we're going to set defaults for when it does that here
+    jslb set_scrolling_hdma_defaults, $a0
 
     ; jump to NES NMI
     CLC
@@ -31,7 +31,6 @@ nmi:
     PHA
     PLB
     
-    jslb translate_8by8only_nes_sprites_to_oam, $a0
     ; Double Dragon NMI is at FF16
     LDA #$ff
     STA BANK_SWITCH_HB
@@ -44,7 +43,14 @@ nmi:
     JML [BANK_SWITCH_LB]
 
 return_from_nes_nmi:
-    ; we likely don't ever end up here
+    PHP
+    PHA
+    PHX
+    PHY
+    jslb snes_nmi, $a0
+    jslb translate_8by8only_nes_sprites_to_oam, $a0
+
+    
     PLY
     PLX
     PLA

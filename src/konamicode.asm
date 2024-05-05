@@ -47,7 +47,6 @@ loop:
     and JOYPAD1
     sta JOYTRIGGER1
     beq :++ 
-
     tya
     and JOYPAD1
     sta JOYHELD1
@@ -72,21 +71,72 @@ loop:
     PLA
     rts
 
+check_for_code_input_from_ram_values:
+    PHA
+    PHB
+    LDA $F5
+    ldy JOYPAD1
+    sta JOYPAD1
+    tya
+    eor JOYPAD1
+    and JOYPAD1
+    sta JOYTRIGGER1
+    BEQ :++
+    
+    LDA #$A0
+    PHA
+    PLB
+
+    tya
+    and JOYPAD1
+    sta JOYHELD1
+
+    lda CODE_INDEX
+    tay
+
+    lda code_values, y
+    cmp JOYTRIGGER1
+    beq :+
+    stz CODE_INDEX
+    bra :++
+    ; correct input
+:   INY
+    INC CODE_INDEX
+    LDA code_values, y
+    CMP #$FF
+    BNE :+
+    jsr code_effect
+
+:   
+    PLB
+    PLA
+    rts
+
+
 code_effect:
-    LDA RDNMI
-    : LDA RDNMI
-    BEQ :-
+    ; LDA RDNMI
+    ; : LDA RDNMI
+    ; BEQ :-
 
-    AND #$80
-    STZ CGADD    
-    LDA #$00
-    STA CGDATA
-    STA CGDATA
+    ; AND #$80
+    ; STZ CGADD    
+    ; LDA #$00
+    ; STA CGDATA
+    ; STA CGDATA
 
-    LDA #$D6
-    STA CGDATA
-    LDA #$10
-    STA CGDATA
+    ; LDA #$D6
+    ; STA CGDATA
+    ; LDA #$10
+    ; STA CGDATA
 
-    INC KONAMI_CODE_ENABLED
+    ; INC KONAMI_CODE_ENABLED
+    LDA #$3F
+    STA $03B4
+
+    LDA #$06
+    STA $40
+
+    LDA #$09
+    STA $43
+
     rts

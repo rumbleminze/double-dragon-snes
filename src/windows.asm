@@ -7,7 +7,7 @@ setup_hide_left_8_pixel_window:
     LDA #$00
     STA WH0
 
-    LDA #$08
+    LDA #$07
     STA WH1
 
     LDA #%10101010

@@ -97,7 +97,9 @@ initialize_registers:
   STZ VTIMEL 
   STZ VTIMEH 
   STZ MDMAEN 
+  STZ HDMA_ENABLED_STATE
   STZ HDMAEN 
+  STZ DMA_ENABLED_STATE
   STZ MEMSEL 
 
   STZ STORED_OFFSETS_SET
@@ -147,7 +149,7 @@ initialize_registers:
   STA BG34NBA
   LDA #$01
   STA BGMODE
-  LDA #$21
+  LDA #$22
   STA BG1SC
 ;   LDA #$32
 ;   STA BG2SC
@@ -169,7 +171,7 @@ initialize_registers:
   STA MEMSEL
 ; Use #$04 to enable overscan if we can.
   LDA #$04
-  LDA #$00
+  ; LDA #$00
   STA SETINI
 
 
@@ -219,10 +221,9 @@ intro_done:
 
 
     LDA RDNMI 
-    
     jslb update_values_for_ppu_mask, $a0
     jslb infidelitys_scroll_handling, $a0
-    jslb update_screen_scroll, $a0 
+    ; jslb update_screen_scroll, $a0 
     jslb setup_hdma, $a0
 
     LDA #$7E
@@ -231,15 +232,20 @@ intro_done:
     STA A1T3H
     STZ A1T3L
     
+    ; Enable the Scroll HDMA 
     LDA #<(BG1HOFS)
     STA BBAD3
+
+    ;  Write 4 bytes, B0->$21XX, B1->$21XX B2->$21XX+1 B3->$21XX+1
     LDA #$03
     STA DMAP3
 
     LDA #%00001000
+    ORA HDMA_ENABLED_STATE
     STA HDMAEN
+    STA HDMA_ENABLED_STATE
 
-    JSR dma_oam_table
+    JSR dma_oam_table    
     RTL
 
 clear_bg_jsl:
@@ -274,7 +280,8 @@ clear_bg:
   STA DAS0H  
   STZ DAS0L
 
-  LDA #$01
+  LDA DMA_ENABLED_STATE
+  ORA #$01
   STA MDMAEN
 
   LDA VMAIN_STATE
@@ -312,10 +319,11 @@ clearvm:
 
   STZ DAS0L
 
-  LDA #$0001
+  setAXY8
+  LDA DMA_ENABLED_STATE
+  ORA #$01
   STA MDMAEN
 
-  setAXY8
   LDA VMAIN_STATE
   STA VMAIN
   RTS
@@ -349,13 +357,14 @@ clear_bg_vm:
   STA A1T0L
   setAXY16
 
-  LDA #$0800
+  LDA #$1000
   STA DAS0L
 
-  LDA #$0001
+  setAXY8
+  LDA DMA_ENABLED_STATE
+  ORA #$01
   STA MDMAEN
 
-  setAXY8
   LDA VMAIN_STATE
   STA VMAIN
   RTS
@@ -396,6 +405,14 @@ clear_zp:
 : STA $00, Y
   INY
   BNE :-
+
+  LDA #$00
+  LDY #$FA
+
+: STA $100, Y
+  DEY
+  BNE :-
+  STA $100, Y
   RTS
 
 clear_buffers:
@@ -459,10 +476,12 @@ dma_values:
 .if ENABLE_MSU = 0
   .include "intro_screen.asm"
 .endif
+  .include "input.asm"
   .include "konamicode.asm"
   .include "palette_updates.asm"
   .include "palette_lookup.asm"
   .include "sprites.asm"
+  .include "hud-hdma.asm"
   .include "tiles.asm"
   .include "hardware-status-switches.asm"
   .include "scrolling.asm"

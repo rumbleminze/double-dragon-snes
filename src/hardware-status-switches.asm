@@ -113,12 +113,28 @@ set_sp_to_1bf_reload_ppucontrol:
   PHA
   RTL 
 
-update_ppu_control_from_fd_ff:
-  LDA BG_SCREEN_INDEX
-  AND #$01
-  ORA PPU_CONTROL_STATE
-  jslb update_ppu_control_values_from_a, $a0
+vmaddh_range:
+.byte $20, $21, $22, $23, $20, $21, $22, $23, $24, $25, $26, $27, $24, $25, $26, $27
+
+store_vmaddh_to_proper_range:
+  CMP #$28
+  BMI :+
+  AND #$23
+  ORA #$04
+  BRA store
+
+: CMP #$24
+  BMI store
+  AND #$23
+
+store:
+  STA VMADDH
   RTL
+
+  
+@store:
+  STA VMADDH
+  RTS
 
 prg_bank_swap_to_a:
   ; save off xya
@@ -202,7 +218,7 @@ change_ppu_vblank_status:
     ; then ORA it with our current stored status
     AND #$80
     BEQ :+
-    
+    LDA RDNMI
     LDA NMITIMEN_STATE
     ORA #$80
     BRA :++
@@ -407,13 +423,11 @@ update_values_for_ppu_mask:
 :   jslb show_left_8_pixel_window, $a0
 :   LDA PPU_MASK_STATE
     AND #$10
-    CMP #$10
-    BNE :+
+    BEQ:+
     STA TM_STATE
     : LDA PPU_MASK_STATE
     AND #$08
-    CMP #$08
-    BNE :+
+    BEQ :+
     LDA #$01
     ORA TM_STATE
     STA TM_STATE
@@ -441,10 +455,10 @@ enable_nmi_and_store:
     STA PPU_CONTROL_STATE
 
     ; not sure on this
-    LDA INIDISP_STATE
-    AND #$7F
-    STA INIDISP
-    STA INIDISP_STATE
+    ; LDA INIDISP_STATE
+    ; AND #$7F
+    ; STA INIDISP
+    ; STA INIDISP_STATE
 
     RTL
 

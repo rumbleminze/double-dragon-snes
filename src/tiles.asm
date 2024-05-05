@@ -112,7 +112,8 @@ check_for_chr_bankswap:
   STZ VMADDH
   STZ VMADDL
 
-  LDA #$01
+  LDA DMA_ENABLED_STATE
+  ORA #$01
   STA MDMAEN
 
   PLB
@@ -216,7 +217,8 @@ bankswap_start:
   STZ VMADDL
   STZ TARGET_BANK_OFFSET
 
-  LDA #$02
+  LDA DMA_ENABLED_STATE
+  ORA #$02
   STA MDMAEN
   PLB
   LDA VMAIN_STATE
@@ -286,11 +288,16 @@ bankswitch_obj_chr_data:
   PLB
 
   LDY #$00
-: LDA CHR_BANK_LOADED_TABLE, y
+: CPY #$02
+  BEQ skip_bg_vram
+  CPY #$03
+  BEQ skip_bg_vram
+  LDA CHR_BANK_LOADED_TABLE, y
   CMP CHR_BANK_BANK_TO_LOAD
   BEQ switch_to_y
   CPY #$06
   BEQ new_obj_bank
+skip_bg_vram:
   INY
   INY
   BRA :-
@@ -396,7 +403,8 @@ dma_chr_to_vm:
   STA VMADDH
   STZ VMADDL
 
-  LDA #$02
+  LDA DMA_ENABLED_STATE
+  ORA #$02
   STA MDMAEN
   PLB
   LDA VMAIN_STATE

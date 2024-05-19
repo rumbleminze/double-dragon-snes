@@ -27,47 +27,31 @@ code_values:
 
 check_for_code_input:
 PHA
-readjoy:
-    lda #$01
-    STA JOYSER0
-    STA buttons
-    LSR A
-    sta JOYSER0
-loop:
-    lda JOYSER0
-    lsr a
-    rol buttons
-    bcc loop
+ ; origingal code
+    LDX $FB
+    INX
+    STX JOYSER0
+    DEX
+    STX JOYSER0
+    LDX #$08
+:   LDA JOYSER0
+    LSR
+    ROL $F5
+    LSR
+    ROL $00
+    DEX
+    BNE :-
 
-    lda buttons
-    ldy JOYPAD1
-    sta JOYPAD1
-    tya
-    eor JOYPAD1
-    and JOYPAD1
-    sta JOYTRIGGER1
-    beq :++ 
-    tya
-    and JOYPAD1
-    sta JOYHELD1
-
-    lda CODE_INDEX
-    tay
-
-    lda code_values, y
-    cmp JOYTRIGGER1
-    beq :+
-    stz CODE_INDEX
-    bra :++
-    ; correct input
-:   INY
-    INC CODE_INDEX
-    LDA code_values, y
-    CMP #$FF
-    BNE :+
-    jsr code_effect
-
-:   
+    ; we also ready the next bit, which is the SNES "A" button
+    ; and if it's on, treat it as if they've hit both Y and B
+;     lda JOYSER0
+;     AND #$01
+;     BEQ :+
+;     LDA $00
+;     ORA #$C0
+;     STA $00
+; :
+    jsr check_for_code_input_from_ram_values
     PLA
     rts
 

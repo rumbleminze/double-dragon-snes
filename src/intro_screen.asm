@@ -256,7 +256,7 @@ write_intro_sprites:
 
 ; loads up the tileset that has the tiles for the intro
 load_intro_tilesets:
-    lda #$01
+    lda #$00
     sta NMITIMEN
     LDA VMAIN_STATE
     AND #$0F

@@ -171,7 +171,7 @@ initialize_registers:
   STA MEMSEL
 ; Use #$04 to enable overscan if we can.
   LDA #$04
-  ; LDA #$00
+  LDA #$00
   STA SETINI
 
 

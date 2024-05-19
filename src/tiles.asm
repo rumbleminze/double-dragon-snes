@@ -147,6 +147,9 @@ check_for_bg_chr_bankswap:
   BEQ :-
 
 bankswap_start:
+  PHA
+  PHY
+  PHX 
   LDA NMITIMEN_STATE
   AND #$7F
   STA NMITIMEN
@@ -234,7 +237,10 @@ bankswap_start:
   ; STA TM
   ; LDA INIDISP_STATE
   ; STA INIDISP
-
+  PLX
+  PLY
+  PLA
+  
   RTL
 
 bankswitch_bg_chr_data:

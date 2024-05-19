@@ -47,6 +47,11 @@ return_from_nes_nmi:
     PHA
     PHX
     PHY
+
+    ; jslb check_and_copy_column_attributes_to_buffer, $a0
+    ; jslb check_and_copy_nes_attribute_buffer_long, $a0
+    jslb check_and_copy_dma_buffers_long, $a0
+
     jslb snes_nmi, $a0
     jslb translate_8by8only_nes_sprites_to_oam, $a0
 

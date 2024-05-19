@@ -5,7 +5,427 @@
 ; this needs to be 2 bytes on the ZP that ideally isn't used.
 .define ZP_ADDR_USAGE $50
 
+dd_one_off_update:
 
+  PLA 
+  STA STACK_TEMP_STORAGE
+  PLA 
+  STA STACK_TEMP_STORAGE + 1
+  PLA
+  STA STACK_TEMP_STORAGE + 2
+
+
+; original code
+  PLA
+  STA $1F
+  PLA
+  STA $1E
+
+  LDA STACK_TEMP_STORAGE + 2
+  PHA
+  LDA STACK_TEMP_STORAGE + 1
+  PHA
+  LDA STACK_TEMP_STORAGE
+  PHA
+  BCC :+
+  PHP
+  PHX
+  PHY
+  PHB
+
+  ; our code
+
+  LDY #$07
+  LDA ($02), Y
+  STA ATTR_NES_VM_ATTR_START + 7
+
+; very ineffecient to redo the whole thing
+; but let's see if we get away with it
+  LDA #$01
+  STA ATTR_NES_HAS_VALUES
+
+  jslb check_and_copy_nes_attribute_buffer_long, $a0
+
+  PLB
+  PLY
+  PLX
+  PLP
+:
+  rtl
+
+dd_update_row_attributes:
+  ; original code from routine @ C784
+  ; c7b7
+  LDA #$00
+  STA $1C
+
+  PHP
+  PHA
+  PHX
+  PHY
+  PHB
+
+  LDA $02
+  SEC
+  SBC #$28
+  TAY 
+
+  CMP #$40
+  BPL :+
+  ; first page of BG calculate LB by adding 80
+  CLC
+  ADC #$C0
+  STA ATTR_NES_VM_ADDR_LB 
+  LDA #$23
+  STA ATTR_NES_VM_ADDR_HB
+  BRA :++
+
+: 
+  ; second page of BG calculate LB by adding 40
+  CLC
+  ADC #$80
+  STA ATTR_NES_VM_ADDR_LB
+  LDA #$27
+  STA ATTR_NES_VM_ADDR_HB
+
+: 
+  LDA #$08
+  STA ATTR_NES_VM_COUNT
+
+  LDA $0628, Y
+  STA ATTR_NES_VM_ATTR_START
+  LDA $0629, Y
+  STA ATTR_NES_VM_ATTR_START + 1
+  LDA $062A, Y
+  STA ATTR_NES_VM_ATTR_START + 2
+  LDA $062B, Y
+  STA ATTR_NES_VM_ATTR_START + 3
+  LDA $062C, Y
+  STA ATTR_NES_VM_ATTR_START + 4
+  LDA $062D, Y
+  STA ATTR_NES_VM_ATTR_START + 5
+  LDA $062E, Y
+  STA ATTR_NES_VM_ATTR_START + 6
+  LDA $062F, Y
+  STA ATTR_NES_VM_ATTR_START + 7
+
+  LDA #$00
+  STA ATTR_NES_VM_ATTR_START + 8
+
+  LDA #$01
+  STA ATTR_NES_HAS_VALUES
+
+  jslb check_and_copy_nes_attribute_buffer_long, $a0
+
+  PLB
+  PLY
+  PLX
+  PLA
+  PLP
+  RTL
+
+
+dd_update_column_attributes:
+
+  ; original code from C982
+  CPX #$1E
+  BMI :+
+  LDX #$00
+  INC $1F
+: STX $1E
+  DEC $08
+  BEQ :+
+  RTL
+
+: PHA
+  PHX
+  PHY
+
+  LDA $1C
+  LSR
+  LSR
+  TAY
+  AND #$07
+  ORA #$C0
+  STA COL_ATTR_VM_LB
+  STA COL2_ATTR_VM_LB
+
+  LDA $02
+  CMP #$67
+
+  LDA #$23
+  STA COL_ATTR_VM_HB
+
+  LDA $0628, Y
+  STA COL_ATTR_VM_START
+  LDA $0630, Y
+  STA COL_ATTR_VM_START + 1
+  LDA $0638, Y
+  STA COL_ATTR_VM_START + 2
+  LDA $0640, Y
+  STA COL_ATTR_VM_START + 3
+  LDA $0648, Y
+  STA COL_ATTR_VM_START + 4
+  LDA $0650, Y
+  STA COL_ATTR_VM_START + 5
+  LDA $0658, Y
+  STA COL_ATTR_VM_START + 6
+  LDA $0660, Y
+  STA COL_ATTR_VM_START + 7
+
+  LDA #$27
+  STA COL2_ATTR_VM_HB
+  LDA $0668, Y
+  STA COL2_ATTR_VM_START
+  LDA $0670, Y
+  STA COL2_ATTR_VM_START + 1
+  LDA $0678, Y
+  STA COL2_ATTR_VM_START + 2
+  LDA $0680, Y
+  STA COL2_ATTR_VM_START + 3
+  LDA $0688, Y
+  STA COL2_ATTR_VM_START + 4
+  LDA $0690, Y
+  STA COL2_ATTR_VM_START + 5
+  LDA $0698, Y
+  STA COL2_ATTR_VM_START + 6
+  LDA $06A0, Y
+  STA COL2_ATTR_VM_START + 7
+
+
+  LDA #$01
+  STA COL_ATTR_HAS_VALUES
+  STA COL2_ATTR_HAS_VALUES
+
+  jslb check_and_copy_column_attributes_to_buffer, $a0
+
+  PLY
+  PLX
+  PLA
+  INC $08
+  DEC $08
+  RTL
+
+
+
+full_attribute_copy_from_0628:
+  PHX
+  PHY
+  PHA
+  
+  LDA #$40
+  STA ATTR_NES_VM_COUNT
+
+  LDA #$23
+  STA ATTR_NES_VM_ADDR_HB
+  LDA #$C0
+  STA ATTR_NES_VM_ADDR_LB
+  LDY #$00
+: LDA $0628, Y
+  STA ATTR_NES_VM_ATTR_START, Y
+  INY
+  CPY #$40
+  BNE :-
+
+  LDA #$01
+  STA ATTR_NES_HAS_VALUES
+  jslb convert_nes_attributes_and_immediately_dma_them, $a0
+
+  ; do 2nd page
+  LDA #$27
+  STA ATTR_NES_VM_ADDR_HB
+  LDA #$C0
+  STA ATTR_NES_VM_ADDR_LB
+  LDA #$40
+  STA ATTR_NES_VM_COUNT
+  LDY #$00
+: LDA $0668, Y
+  STA ATTR_NES_VM_ATTR_START, Y
+  INY
+  CPY #$40
+  BNE :-
+  LDA #$01
+  STA ATTR_NES_HAS_VALUES
+  jslb convert_nes_attributes_and_immediately_dma_them, $a0
+
+  PLA
+  PLY
+  PLX
+
+  RTL
+
+
+attr_18_palette_01s:
+.byte $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04, $04
+.byte $04, $04, $04, $04, $04, $04, $04, $04
+
+set_bottom_3_rows_of_attributes_to_55:
+  LDA #$80
+  STA VMAIN
+
+  ; fixed A value, increment B
+  setAXY16
+
+  LDA #$0009
+  sta DMAP0
+
+  LDA #$2660
+  STA VMADDL
+
+  LDA #$19
+  STA BBAD0
+
+  LDA #$A0
+  STA A1B0
+
+  setAXY8
+  LDA #>attr_18_palette_01s
+  STA A1T0H
+  LDA #<attr_18_palette_01s
+  STA A1T0L
+  setAXY16
+
+  LDA #$300
+  STA DAS0L
+
+  setAXY8
+  LDA DMA_ENABLED_STATE
+  ORA #$01
+  STA MDMAEN
+
+  LDA VMAIN_STATE
+  STA VMAIN
+  RTS
+
+; A rewrite of the tile/attribute writing code
+; which allows me to split out the attribute writes
+; we need to intentionally keep the DB set to where
+; we came from so that reads work.
+write_tile_and_attribute_rewrite:
+  LDA $50
+  PHA
+  LDA $51
+  PHA
+
+  LDA $8000,X
+  STA $21
+  LDA $8001,X
+  STA $22
+rw_c280:
+  LDY #$00
+  LDA ($21),Y
+  CMP #$00
+  BNE rw_c2c8
+  INY
+  LDA ($21),Y
+  CMP #$00
+  BNE rw_c2a5
+  LDA $16
+  CMP #$05
+  BMI :+
+  CMP #$0D
+  BPL :+
+  CLC
+  ADC #$0C
+  JMP rw_c2a5  
+: PLA
+  STA $51
+  PLA
+  STA $50
+  RTL
+
+
+; c2a5
+rw_c2a5:
+  STZ ATTR_VM_DATA_MAYBE_ATTR
+  STZ ATTR_NES_VM_COUNT
+  jslb store_vmaddh_to_proper_range, $a0 ; STA VMADDH ; PpuAddr_2006
+  ; store as ATTR HB in case it's attributes
+  STA ATTR_NES_VM_ADDR_HB
+  AND #$03
+  CMP #$03
+  BNE :+
+    INC ATTR_VM_DATA_MAYBE_ATTR
+: INY
+  LDA ($21),Y
+  STA VMADDL ; PpuAddr_2006
+  STA ATTR_NES_VM_ADDR_LB
+  CMP #$BF
+  BCC :+
+  INC ATTR_VM_DATA_MAYBE_ATTR   
+: 
+  LDA ATTR_VM_DATA_MAYBE_ATTR
+  AND #$02
+  BEQ :+
+    INC ATTR_NES_HAS_VALUES
+    LDA #<ATTR_NES_VM_ATTR_START
+    STA $50
+    LDA #>ATTR_NES_VM_ATTR_START
+    STA $51
+:
+  INY
+  LDA ($21),Y
+  ASL A
+  ASL A
+  STA $15
+  
+; set VM Write Increment to 1
+  jslb set_vram_increment_based_on_a_and_store, $a0
+  LDA #$04
+  JSR rw_c2ec
+  JMP rw_c280
+
+rw_c2c8:
+  STA $05
+  INY
+  LDA ($21),Y
+  STA $08
+  LDA #$02
+  JSR rw_c2ec
+: LDY #$00
+: LDA ($21),Y
+
+  PHA
+  LDA ATTR_VM_DATA_MAYBE_ATTR
+  AND #$02
+  BEQ :+
+  PLA
+  jsr store_to_attr_cache 
+  BRA :++
+: PLA
+  STA VMDATAL ; PpuData_2007
+
+: INY
+  CPY $08
+  BNE :---
+  DEC $05
+  BNE :----
+  LDA $08
+  JSR rw_c2ec
+  JMP rw_c280
+  
+rw_c2ec:
+  CLC
+  ADC $21
+  STA $21
+  LDA $22
+  ADC #$00
+  STA $22
+  RTS
+
+
+store_to_attr_cache:
+  STA ($50)
+  INC ATTR_NES_VM_COUNT
+  INC $50
+  BNE :+
+  INC $51
+: PHA
+  LDA #$00
+  STA ($50)
+  PLA
+  RTS
+ 
 
 check_and_copy_attribute_buffer:
   LDA ATTRIBUTE_DMA
@@ -16,15 +436,19 @@ check_and_copy_attribute_buffer:
 ;   BEQ :+
 ;   JSR copy_prepped_attributes2_to_vram
 ; : 
-;   LDA COLUMN_1_DMA
-;   BEQ :+
-;   JSR dma_column_attributes
-; : LDA COLUMN_2_DMA
-;   BEQ :+
-;   JSR dma_column2_attributes
-; : 
+  LDA COLUMN_1_DMA
+  BEQ :+
+  JSR dma_column_attributes
+: 
+  LDA COLUMN_2_DMA
+  BEQ :+
+  JSR dma_column2_attributes
+ : 
   RTS
 
+check_and_copy_dma_buffers_long:
+  JSR check_and_copy_attribute_buffer
+  RTL
 
 copy_single_prepped_attribute:
   LDA ZP_ADDR_USAGE
@@ -89,10 +513,11 @@ copy_prepped_attributes_to_vram:
   LDA ATTR_DMA_SIZE_LB
   BNE :+
   RTS
-: CMP #$10
-  BNE :+
-  JMP copy_single_prepped_attribute
+; : CMP #$10
+;   BNE :+
+;   JMP copy_single_prepped_attribute
 
+; : 
 : LDA #$80
   STA VMAIN
   STZ DMAP6
@@ -106,8 +531,8 @@ copy_prepped_attributes_to_vram:
   LDA ATTR_DMA_SRC_LB ; ,X
   STA A1T6L
   LDA ATTR_DMA_SIZE_LB ;,X
-  CMP #$80
-  BMI handle_partials
+  ; CMP #$80
+  ; BMI handle_partials
   BRA handle_full
 handle_partials:
   JSR copy_partial_prepped_attributes_to_vram
@@ -133,6 +558,9 @@ handle_full:
   BPL :-
   LDA #$FF
   STA ATTRIBUTE_DMA + 1
+  
+  LDA VMAIN_STATE
+  STA VMAIN
   RTS
 
 copy_partial_prepped_attributes_to_vram:
@@ -217,6 +645,34 @@ convert_nes_attributes_and_immediately_dma_them:
   ; JSR check_and_copy_column_attributes_to_buffer
   JSR check_and_copy_attribute_buffer
   pla
+  sta ATTR_WORK_BYTE_3
+  pla
+  sta ATTR_WORK_BYTE_2
+  pla
+  sta ATTR_WORK_BYTE_1
+  pla 
+  sta ATTR_WORK_BYTE_0
+  PLX
+  PLA
+  PLY
+  RTL
+
+check_and_copy_nes_attribute_buffer_long:
+  PHY
+  PHA
+  PHX
+  LDA ATTR_WORK_BYTE_0
+  PHA
+  LDA ATTR_WORK_BYTE_1
+  PHA
+  LDA ATTR_WORK_BYTE_2
+  PHA
+  LDA ATTR_WORK_BYTE_3 
+  PHA
+  LDA ATTR_NES_HAS_VALUES
+  BEQ :+
+  JSR convert_attributes_inf
+: pla
   sta ATTR_WORK_BYTE_3
   pla
   sta ATTR_WORK_BYTE_2
@@ -318,22 +774,31 @@ inf_9497:
 : INY
   INY
   LDA (ATTR_WORK_BYTE_0),Y
-  AND #$3F
-  PHX
-  TAX
-  LDA attr_lookup_table_2_inf_95C0 + 15,X
-  PLX
+  AND #$0F
+  ASL
+  ASL
+  ASL
+  ASL
+  ; PHX
+  ; TAX
+  ; LDA attr_lookup_table_2_inf_95C0 + 15,X
+  ; PLX  
   STA ATTR_DMA_SIZE_LB,X
   LDA (ATTR_WORK_BYTE_0),Y
-  AND #$3F  
+  AND #$F0  
   CMP #$0F
   BPL :+
   LDA #$00
   BRA :++
-: PHX
-  TAX
-  LDA inf_95AE,X
-  PLX
+: AND #$F0
+  LSR
+  LSR
+  LSR
+  LSR
+  ; PHX
+  ; TAX
+  ; LDA inf_95AE,X
+  ; PLX
 : STA ATTR_DMA_SIZE_HB,X
   ; LDA #$80
   ; STA ATTR_DMA_SIZE_LB
@@ -511,7 +976,7 @@ check_and_copy_column_attributes_to_buffer:
 : LDA COL2_ATTR_HAS_VALUES
   BEQ :+
   JSR convert_column2_of_tiles
-: RTS
+: RTL
 
 convert_column_of_tiles:
   LDA COL_ATTR_VM_HB

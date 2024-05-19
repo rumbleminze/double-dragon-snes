@@ -44,13 +44,49 @@
 .byte $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $02
 .byte $02, $02, $02, $02, $02, $02, $02, $02, $02, $02, $85, $16, $A8, $B9, $0D, $C2
 .byte $AA, $B9, $26, $C2, $8D, $F4, $04, $B9, $40, $C2, $20, $EE, $FE, $C0, $10, $D0
-.byte $05, $A9, $1E, $20, $76, $FE, $BD, $00, $80, $85, $21, $BD, $01, $80, $85, $22
-.byte $A0, $00, $B1, $21, $C9, $00, $D0, $40, $C8, $B1, $21, $C9, $00, $D0, $16, $A5
-.byte $16, $C9, $05, $30, $0A, $C9, $0D, $10, $06, $18, $69, $0C, $4C, $5A, $C2, $A9
-.byte $06, $20, $EE, $FE, $60
+.byte $05, $A9, $1E, $20, $76, $FE
+
+; start the tile and attribute loading code
+; get the address of the data to write
+; VM data is:
+; VMADDH, VMADDL, V or H write
+; [repeated] times to repeat entry, values in entry, entry values
+; 00 00 00 00
+  jslb write_tile_and_attribute_rewrite, $a0
+  LDA ATTR_NES_HAS_VALUES
+  BEQ :+
+  jslb convert_nes_attributes_and_immediately_dma_them, $a0
+: nops 28
+;   LDA $8000,X
+;   STA $21
+;   LDA $8001,X
+;   STA $22
+; @c280:
+;   LDY #$00
+;   LDA ($21),Y
+;   CMP #$00
+;   BNE @c2c8
+;   INY
+;   LDA ($21),Y
+;   CMP #$00
+;   BNE @c2a5
+;   LDA $16
+;   CMP #$05
+;   BMI :+
+;   CMP #$0D
+;   BPL :+
+;   CLC
+;   ADC #$0C
+;   JMP @c2a5
+;:
+; done, bank switch back to bank 6, and go to FEEE
+  LDA #$06
+  JSR $FEEE
+  RTS
 
 
 ; c2a5
+@c2a5:
   jsr @store_vm_add_h_to_range ; STA VMADDH ; PpuAddr_2006
   INY
   LDA ($21),Y
@@ -61,7 +97,7 @@
   ASL A
   STA $15
   
-  ; set VM Write Increment to 1
+; set VM Write Increment to 1
 ;   LDA $FF
 ;   AND #$FB
 ;   ORA $15
@@ -70,16 +106,16 @@
   jslb set_vram_increment_based_on_a_and_store, $a0
   nops 7
 
-
   LDA #$04
-  JSR $C2EC
-  JMP $C280
+  JSR $c2ec
+  JMP $c280
+@c2c8:
   STA $05
   INY
   LDA ($21),Y
   STA $08
   LDA #$02
-  JSR $C2EC
+  JSR $c2ec
 : LDY #$00
 : LDA ($21),Y
   STA VMDATAL ; PpuData_2007
@@ -89,8 +125,10 @@
   DEC $05
   BNE :--
   LDA $08
-  JSR $C2EC
-  JMP $C280
+  JSR $c2ec
+  JMP $c280
+  
+@c2ec:
   CLC
   ADC $21
   STA $21
@@ -103,9 +141,20 @@
 
 
 ; C300 - bank 7
-.byte $00, $00, $00, $00, $00, $00, $00, $0F, $10, $A9, $00, $8D, $1D, $05, $A0, $80
-.byte $A2, $30, $B9, $64, $04, $9D, $28, $06, $9D, $68, $06, $E8, $C8, $E0, $40, $D0
-.byte $F1
+.byte $00, $00, $00, $00, $00, $00, $00, $0F, $10
+
+  LDA #$00
+  STA $051D
+  LDY #$80
+  LDX #$30
+: LDA $0464,Y
+  STA $0628,X
+  STA $0668,X
+  INX
+  INY
+  CPX #$40
+  BNE :-
+
 
 ; C321
   LDA #$2B
@@ -176,22 +225,41 @@ nops 5
 ; C400 - bank 7
 .byte $20, $A9, $3C, $C5, $20, $D0, $04, $A9, $00, $85, $20, $C6, $05, $D0, $C2
 
-  LDA #$23
-  STA VMADDH
-  LDY #$00
-  LDA #$C0
-  STA VMADDL
-  LDA $0628,Y
-  STA VMDATAL
 
-.byte $C8, $C0, $80, $F0, $0F, $C0, $40, $F0, $03, $4C, $1B, $C4
+; loads 0x80 bytes to attributes
+; basically a full attribute copy 
+; from $0628,Y
 
-; C42d
-  LDA #$2B
-  jsr @store_vm_add_h_to_range ; STA PpuAddr_2006
+  jslb full_attribute_copy_from_0628, $a0
+  nops 34
 
-.byte $4C, $16, $C4, $20, $2F, $CB, $20, $A1, $CF, $A9, $00, $20, $F5, $C7
-.byte $A9, $06, $20, $EE, $FE, $60
+;   LDA #$23
+;   STA VMADDH
+;   LDY #$00
+;   LDA #$C0
+;   STA VMADDL
+;   LDA $0628,Y
+;   STA VMDATAL
+;   INY
+;   CPY #$80
+;   BEQ :++
+;   CPY #$40
+;   BEQ :+
+;   JMP $C41B
+
+; ; C42d
+; : LDA #$2B
+;   jsr @store_vm_add_h_to_range ; STA PpuAddr_2006
+;   JMP $C416
+; :
+  JSR $CB2F
+  JSR $CFA1
+  LDA #$00
+  JSR $C7F5
+  LDA #$06
+  JSR $FEEE
+  RTS
+
 
 ; C446
   LDA $DB
@@ -214,11 +282,45 @@ nops 5
 .byte $C5, $30, $39, $A5, $DF, $29, $0F, $C9, $05, $30, $68, $85, $15, $A5, $DB, $29
 .byte $0F, $C9, $05, $30, $04, $C5, $15, $30, $5A, $A5, $DF, $A6, $E0, $85, $1C, $86
 .byte $1D, $18, $A5, $E1, $69, $28, $85, $1E, $A5, $E2, $69, $00, $85, $1F, $20, $10
-.byte $C9, $A5, $3B, $29, $1F, $09, $80, $85, $3B, $4C, $F3, $C4, $A5, $DB, $29, $0F
-.byte $C9, $05, $30, $2F, $85, $15, $A5, $DF, $29, $0F, $C9, $05, $30, $04, $C5, $15
-.byte $30, $21, $A5, $DF, $A6, $E0, $E8, $85, $1C, $86, $1D, $18, $A5, $E1, $69, $28
-.byte $85, $1E, $A5, $E2, $69, $00, $85, $1F, $20, $10, $C9, $A5, $3B, $29, $1F, $09
-.byte $80, $85, $3B, $18, $A5, $E1, $69, $E8, $85, $1E, $A5, $E2, $69, $00, $85, $1F
+.byte $C9, $A5, $3B, $29, $1F, $09, $80, $85, $3B, $4C, $F3, $C4
+
+; checking for scrolling
+; and triggers tile / attribute writes
+  LDA $DB
+  AND #$0F
+  CMP #$05
+  BMI @nes_C4F3
+  STA $15
+  LDA $DF
+  AND #$0F
+  CMP #$05
+  BMI :+
+  CMP $15
+  BMI @nes_C4F3
+: 
+  LDA $DF
+  LDX $E0
+  INX
+  STA $1C
+  STX $1D
+  CLC
+  LDA $E1
+  ADC #$28
+  STA $1E
+  LDA $E2
+  ADC #$00
+  STA $1F
+  ; write attributes for scrolling
+  JSR $C910
+  LDA $3B
+  AND #$1F
+  ORA #$80
+  STA $3B
+@nes_C4F3:
+  CLC
+
+
+.byte $A5, $E1, $69, $E8, $85, $1E, $A5, $E2, $69, $00, $85, $1F
 
 
 ; C500 - bank 7
@@ -271,11 +373,45 @@ nops 5
 .byte $60, $4C, $E4, $C6, $A5, $1C, $48, $A5, $1D, $48, $A5, $1E, $48, $A5, $1F, $48
 .byte $20, $D1, $C9, $20, $03, $CA, $A9, $21, $85, $08, $20, $94, $CA, $A4, $1C, $B1
 .byte $21, $9D, $28, $05, $E6, $09, $E8, $E4, $E3, $F0, $FE, $C6, $08, $F0, $1E, $20
-.byte $73, $CA, $C8, $C0, $20, $D0, $E8, $A9, $00, $85, $1C, $E6, $1D, $06, $09, $20
-.byte $B4, $CA, $20, $03, $CA, $20, $94, $CA, $A0, $00, $4C, $9F, $C7, $06, $09, $20
-.byte $B4, $CA, $A5, $DB, $29, $0F, $AA, $BD, $D2, $C1, $4A, $90, $03, $20, $73, $CA
-.byte $68, $85, $1F, $68, $85, $1E, $68, $85, $1D, $68, $85, $1C, $A9, $01, $20, $EE
-.byte $FE, $20, $C6, $BD, $60, $85, $16, $A9, $03, $C5, $3D, $D0, $05, $C5, $3E, $D0
+.byte $73, $CA, $C8, $C0, $20, $D0, $E8
+
+  ; LDA #$00
+  ; STA $1C
+  jslb dd_update_row_attributes, $a0
+  INC $1D
+  ASL $09
+  JSR $CAB4
+  JSR $CA03
+  JSR $CA94
+  LDY #$00
+  JMP $C79F
+
+  ; last bit
+  ASL $09
+  JSR $CAB4
+  LDA $DB
+  AND #$0F
+  TAX
+  LDA $C1D2,X
+  LSR
+  BCC :+
+  JSR $CA73
+  ; need to do 1 more attr. update here
+: 
+  ; PLA
+  ; STA $1F
+  ; PLA
+  ; STA $1E
+  jslb dd_one_off_update, $a0
+  nops 2
+  PLA
+  STA $1D
+  PLA
+  STA $1C
+  LDA #$01
+  JSR $FEEE
+
+.byte $20, $C6, $BD, $60, $85, $16, $A9, $03, $C5, $3D, $D0, $05, $C5, $3E, $D0
 
 
 ; C800 - bank 7
@@ -299,15 +435,84 @@ nops 5
 
 ; C900 - bank 7
 .byte $28, $05, $E8, $C8, $C6, $09, $D0, $F4, $86, $E4, $C6, $08, $4C, $B1, $C8, $60
-.byte $20, $D1, $C9, $A9, $0D, $85, $08, $A5, $1F, $0A, $0A, $0A, $85, $15, $A5, $1D
-.byte $29, $07, $05, $15, $A8, $B1, $18, $AA, $BD, $02, $80, $85, $23, $BD, $03, $80
-.byte $85, $24, $A5, $20, $4A, $A8, $B9, $9F, $C1, $18, $69, $28, $85, $02, $A9, $06
-.byte $69, $00, $85, $03, $A5, $1E, $4A, $A8, $B9, $BD, $C1, $4A, $A2, $0F, $90, $02
-.byte $A2, $F0, $18, $86, $04, $65, $23, $85, $23, $A5, $24, $69, $00, $85, $24, $A4
-.byte $1C, $20, $73, $CA, $A6, $20, $E8, $E0, $3C, $30, $02, $A2, $00, $E8, $E0, $3C
-.byte $30, $02, $A2, $00, $86, $20, $A6, $1E, $E8, $E0, $1E, $30, $04, $A2, $00, $E6
-.byte $1F, $E8, $E0, $1E, $30, $04, $A2, $00, $E6, $1F, $86, $1E, $C6, $08, $D0, $87
-.byte $60, $A5, $3D, $0A, $0A, $0A, $85, $15, $A5, $3E, $0A, $05, $15, $A8, $B9, $00
+
+  JSR $C9D1
+  LDA #$0D
+  STA $08
+@nes_C917:
+  LDA $1F
+  ASL A
+  ASL A
+  ASL A
+  STA $15
+  LDA $1D
+  AND #$07
+  ORA $15
+  TAY
+  LDA ($18),Y
+  TAX
+  LDA $8002,X
+  STA $23
+  LDA $8003,X
+  STA $24
+  LDA $20
+  LSR A
+  TAY
+  LDA $C19F,Y
+  CLC
+  ADC #$28
+  STA $02
+  LDA #$06
+  ADC #$00
+  STA $03
+  LDA $1E
+  LSR A
+  TAY
+  LDA $C1BD,Y
+  LSR A
+  LDX #$0F
+  BCC :+
+  LDX #$F0
+: CLC
+  STX $04
+  ADC $23
+  STA $23
+  LDA $24
+  ADC #$00
+  STA $24
+  LDY $1C
+  JSR $CA73
+  LDX $20
+  INX
+  CPX #$3C
+  BMI :+
+  LDX #$00
+: INX
+  CPX #$3C
+  BMI :+
+  LDX #$00
+: STX $20
+  LDX $1E
+  INX
+  CPX #$1E
+  BMI :+
+  LDX #$00
+  INC $1F
+: INX
+;   CPX #$1E
+;   BMI :+
+;   LDX #$00
+;   INC $1F
+; : STX $1E
+;   DEC $08
+; moved to dd_update_column_attributes
+  jslb dd_update_column_attributes, $a0
+  nops 8
+  BNE @nes_C917
+  RTS
+
+; C991
+.byte $A5, $3D, $0A, $0A, $0A, $85, $15, $A5, $3E, $0A, $05, $15, $A8, $B9, $00
 .byte $C0, $BE, $01, $C0, $85, $18, $86, $19, $B9, $1E, $C0, $85, $15, $20, $EE, $FE
 .byte $B9, $3C, $C0, $85, $1A, $B9, $3D, $C0, $85, $1B, $60, $A5, $DB, $A6, $DC, $85
 .byte $1C, $86, $1D, $A5, $DD, $18, $69, $20, $85, $1E, $A5, $DE, $69, $00, $85, $1F
@@ -1021,15 +1226,18 @@ nops 5
   STA $26
   ORA $25
   BNE :-
-  LDA #$2B   ; #$2B
-  jsr @store_vm_add_h_to_range ; STA VMADDH ; PpuAddr_2006
-  LDA #$E8
-  STA VMADDL ; PpuAddr_2006
-  LDA #$55
-  LDX #$18
-: STA VMDATAL ; PpuData_2007
-  DEX
-  BNE :-
+
+  jslb set_bottom_3_rows_of_attributes_to_55, $a0
+  nops 16
+;   LDA #$2B   ; #$2B
+;   jsr @store_vm_add_h_to_range ; STA VMADDH ; PpuAddr_2006
+;   LDA #$E8
+;   STA VMADDL ; PpuAddr_2006
+;   LDA #$55
+;   LDX #$18
+; : STA VMDATAL ; PpuData_2007
+;   DEX
+;   BNE :-
 
 
 .byte $20, $27
@@ -2229,7 +2437,7 @@ STA VMDATAL ; Ppu_Data2007
   JMP @return_from_stack_shenanigans
 
 @store_vm_add_h_to_range:
-  jsl store_vmaddh_to_proper_range
+  jslb store_vmaddh_to_proper_range, $a0
   RTS
 
 @exit_from_interrupt:

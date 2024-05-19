@@ -39,9 +39,9 @@ infidelitys_scroll_handling:
   PHA 
   AND #$80
   BNE :+
-  LDA #$01
+  LDA #$00
   BRA :++
-: LDA #$81
+: LDA #$80
 : STA NMITIMEN
   PLA        
   PHA 

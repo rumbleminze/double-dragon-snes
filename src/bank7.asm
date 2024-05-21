@@ -792,9 +792,29 @@ nops 5
 .byte $29, $0F, $85, $15, $D0, $0A, $BD, $F7, $B6, $4A, $4A, $90, $03, $4C, $70, $D0
 .byte $A5, $15, $0A, $A8, $B1, $21, $85, $06, $C8, $B1, $21, $85, $07, $A9, $00, $85
 .byte $08, $A5, $1D, $38, $E5, $1C, $C9, $1F, $B0, $2C, $A5, $08, $0A, $A8, $B1, $00
-.byte $85, $15, $B1, $06, $85, $21, $C8, $B1, $00, $8D, $06, $20, $B1, $06, $85, $22
-.byte $A5, $15, $8D, $06, $20, $A9, $04, $8D, $00, $20, $A0, $00, $B1, $21, $8D, $07
-.byte $20, $C8, $C4, $03, $D0, $F6, $E6, $1D, $E6, $08, $A5, $08, $C5, $02, $D0, $C1
+.byte $85, $15, $B1, $06, $85, $21, $C8
+
+  LDA ($00),Y
+  ; STA $2006
+  JSR @store_vm_add_h_to_range
+  LDA ($06),Y
+  STA $22
+  LDA $15
+  STA VMADDL ; $2006
+  
+  ; LDA #$04
+  ; STA $2000
+  jslb set_vram_increment_to_32_no_store, $a0
+  nops 1
+
+  LDY #$00
+: LDA ($21),Y
+  STA VMDATAL ; $2007
+  INY
+  CPY $03
+  BNE :-
+
+.byte $E6, $1D, $E6, $08, $A5, $08, $C5, $02, $D0, $C1
 .byte $E6, $09, $4C, $D3, $CF, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 .byte $A9, $00, $85, $49, $A6, $49, $B5, $4A, $10, $1A, $29, $60, $4A, $4A, $4A, $4A
 .byte $A8, $B9, $AD, $D0, $85, $25, $B9, $AE, $D0, $85, $26, $A9, $D0, $48, $A9, $A3
@@ -1488,7 +1508,20 @@ nops 5
 ; ec79 - This appears to be setting the scroll for the HUD
 ; we'll likely end up doing this in a different way
   RTS
-  nops 67
+
+  nops 47
+
+  ; stealing a bunch of nops here for audio
+  @audio_hijack_1:
+    JSR $8000
+    jslb convert_audio, $a0
+    JMP @audio_hijack_1_return
+
+  @audio_hijack_2:
+    JSR $8003
+    jslb convert_audio, $a0
+    JMP @audio_hijack_2_return
+
 ;   LDA $3B
 ;   AND #$01
 ;   BEQ :+
@@ -1962,12 +1995,26 @@ STA VMDATAL ; Ppu_Data2007
 .byte $85, $23, $A5, $41, $29, $F0, $18, $65, $23, $85, $23, $38, $E9, $A0, $90, $18
 .byte $85, $23, $E6, $42, $A5, $42, $C9, $0A, $90, $0E, $E6, $40, $A9, $00, $85, $41
 .byte $85, $42, $A9, $1B, $20, $E1, $FB, $60, $A5, $23, $05, $24, $85, $41, $4C, $D7
-.byte $FB, $8D, $00, $05, $AD, $04, $01, $48, $A9, $05, $20, $EE, $FE, $AD, $00, $05
-.byte $20, $00, $80, $68, $20, $EE, $FE, $60, $AD, $04, $01, $48, $A9, $05, $20, $EE
+.byte $FB, $8D, $00, $05, $AD, $04, $01, $48, $A9, $05, $20, $EE, $FE
+
+; audio take-over
+  LDA $0500
+  JSR $8000
+  ; JMP @audio_hijack_1
+@audio_hijack_1_return:
+
+.byte $68, $20, $EE, $FE, $60, $AD, $04, $01, $48, $A9, $05, $20, $EE
 
 
 ; FC00 - bank 7
-.byte $FE, $20, $03, $80, $68, $20, $EE, $FE, $60, $A9, $04, $20, $EE, $FE, $20, $E2
+.byte $FE
+
+; audio take-over 2
+  ; JSR $8003
+  JMP @audio_hijack_2
+@audio_hijack_2_return:
+
+.byte $68, $20, $EE, $FE, $60, $A9, $04, $20, $EE, $FE, $20, $E2
 .byte $BF, $A9, $06, $20, $EE, $FE, $60, $A9, $04, $20, $EE, $FE, $20, $DF, $BF, $A9
 .byte $06, $20, $EE, $FE, $60, $A9, $04, $20, $EE, $FE, $20, $E5, $BF, $A9, $06, $20
 .byte $EE, $FE, $60, $AD, $04, $01, $48, $A9, $05, $20, $EE, $FE, $20, $00, $A5, $68

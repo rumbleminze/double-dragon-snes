@@ -35,6 +35,7 @@ no_scroll_screen_enable:
   RTL 
 
 infidelitys_scroll_handling:
+
   LDA PPU_CONTROL_STATE
   PHA 
   AND #$80
@@ -76,6 +77,60 @@ infidelitys_scroll_handling:
   STA HOFS_HB
   ; STA VOFS_HB
 : RTL 
+
+mode_b_scrolling_update:
+
+  LDA #111
+  STA SCROLL_HDMA_START
+  LDA #80
+  STA SCROLL_HDMA_START + 3
+  LDA #48
+  STA SCROLL_HDMA_START + 6
+  LDA #01
+  STA SCROLL_HDMA_START + 9
+  STZ SCROLL_HDMA_START + 12
+
+  LDA HOFS_LB
+  STA SCROLL_HDMA_START + 1  
+  STA SCROLL_HDMA_START + 4
+  STA SCROLL_HDMA_START + 10
+  ; STA BG1HOFS
+  
+  LDA HOFS_HB
+  STA SCROLL_HDMA_START + 2  
+  STA SCROLL_HDMA_START + 5  
+  STA SCROLL_HDMA_START + 11
+  ; STA BG1HOFS
+
+  ; at line 191 we want to set HOFS to 0
+  STZ SCROLL_HDMA_START + 7
+  STZ SCROLL_HDMA_START + 8
+
+  LDA #$7E
+  STA A1B3
+  LDA #>(SCROLL_HDMA_START)
+  STA A1T3H
+  STZ A1T3L
+
+  LDA #<(BG1HOFS)
+  STA BBAD3
+
+  LDA #$02
+  STA DMAP3
+
+  LDA #%00001000
+  ORA HDMA_ENABLED_STATE
+  STA HDMAEN
+  STA HDMA_ENABLED_STATE
+
+  LDA HOFS_LB
+  STA BG1HOFS
+  
+  LDA HOFS_HB
+  STA BG1HOFS
+
+  RTL
+
 
 default_scrolling_hdma_values:
 .byte $6F, $00, $92, $00, $C9, $58, $00, $92, $00, $C9, $27, $00, $00, $00, $01, $00

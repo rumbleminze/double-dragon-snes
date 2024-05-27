@@ -60,6 +60,10 @@ sprite_loop:
   STZ SNES_OAM_TRANSLATE_NEEDED
 	rtl
 
+dma_oam_table_long:
+  JSR dma_oam_table
+  RTL
+
 dma_oam_table:
   STZ OAMADDL
   STZ OAMADDH

@@ -117,6 +117,12 @@ vmaddh_range:
 .byte $20, $21, $22, $23, $20, $21, $22, $23, $24, $25, $26, $27, $24, $25, $26, $27
 
 store_vmaddh_to_proper_range:
+  PHA
+  LDA BANK_SWITCH_CTRL_REGS
+  AND #$01
+  BEQ store_vmaddh_for_vertical_mirroring
+
+  PLA
   CMP #$28
   BMI :+
   AND #$23
@@ -131,10 +137,14 @@ store:
   STA VMADDH
   RTL
 
-  
-@store:
-  STA VMADDH
-  RTS
+store_vmaddh_for_vertical_mirroring:
+  PLA
+  ; 20-23 = 20-23
+  ; 24-27 = 24-27
+  ; 28-2B = 20-23
+  ; 2C-2F = 24-27
+  AND #$27
+  BRA store
 
 prg_bank_swap_to_a:
   ; save off xya
@@ -586,3 +596,15 @@ disable_nmi_and_fblank_no_store:
     jslb force_blank_no_store, $a0
     jslb disable_nmi_no_store, $a0
     RTL
+
+handle_mmc1_control_register:
+  LDA BANK_SWITCH_CTRL_REGS
+  AND #$03
+  CMP #$03
+  BNE :+
+  LDA #$22
+  STA BG1SC
+  rtl
+: LDA #$21
+  STA BG1SC
+  rtl

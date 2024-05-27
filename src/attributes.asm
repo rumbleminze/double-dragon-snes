@@ -297,6 +297,26 @@ set_bottom_3_rows_of_attributes_to_55:
   STA VMAIN
   RTS
 
+rewrite_c25a:
+  STA $16
+  TAY
+  LDA $C20D,Y
+  TAX
+  LDA $C226,Y
+  STA $04F4
+  LDA $C240,Y
+  AND #$0F
+  INC A
+  ORA #$A0
+  STA 5, s
+;  JSR $FEEE
+  CPY #$10
+  BNE :+
+  LDA #$1E
+  JSR $FE76
+  BRA :+
+
+
 ; A rewrite of the tile/attribute writing code
 ; which allows me to split out the attribute writes
 ; we need to intentionally keep the DB set to where
@@ -306,7 +326,7 @@ write_tile_and_attribute_rewrite:
   PHA
   LDA $51
   PHA
-
+:
   LDA $8000,X
   STA $21
   LDA $8001,X
@@ -327,7 +347,7 @@ rw_c280:
   BPL :+
   CLC
   ADC #$0C
-  JMP rw_c2a5  
+  JMP rewrite_c25a  
 : PLA
   STA $51
   PLA
@@ -337,8 +357,17 @@ rw_c280:
 
 ; c2a5
 rw_c2a5:
+  PHA
+  LDA ATTR_NES_HAS_VALUES
+  BEQ :+
+  PHB
+  jslb convert_nes_attributes_and_immediately_dma_them, $a0
+  PLB
+:
   STZ ATTR_VM_DATA_MAYBE_ATTR
   STZ ATTR_NES_VM_COUNT
+  PLA
+
   jslb store_vmaddh_to_proper_range, $a0 ; STA VMADDH ; PpuAddr_2006
   ; store as ATTR HB in case it's attributes
   STA ATTR_NES_VM_ADDR_HB

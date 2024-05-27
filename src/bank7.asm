@@ -2035,9 +2035,10 @@ STA VMDATAL ; Ppu_Data2007
 ;   ORA #$80
 ;   STA $FF
 ;   STA $2000 ; PpuControl_2000
+  jslb translate_8by8only_nes_sprites_to_oam, $a0
   jslb enable_nmi_and_store, $a0
-  nops 5
- 
+  nops 1
+  
 
 : BNE :-
 
@@ -2251,11 +2252,11 @@ STA VMDATAL ; Ppu_Data2007
 ; Including Mirroring / PRG Bank and CHR Bank mode
 ; I'm pretty sure this is only ever set to $1F in DD
 ; but for other games you might need to do something for it.
-;   STA BANK_SWITCH_CTRL_REGS
+   STA BANK_SWITCH_CTRL_REGS
 ;   SEI
-  nops 37
   ; this is what ends up getting returned
   LDA PPU_CONTROL_STATE 
+  jslb handle_mmc1_control_register, $a0
 ;   PHA
 ;   JSR $FE6A
 ;   LDA BANK_SWITCH_CTRL_REGS
@@ -2273,6 +2274,19 @@ STA VMDATAL ; Ppu_Data2007
 ;   STA PpuControl_2000
 ;   CLI
   RTS
+  nops 9
+
+@active_bank_rewrite:
+  STA ACTIVE_NES_BANK
+  SEI
+  LDA PPU_CONTROL_STATE
+  PHA
+  JSR $FE6A
+  LDA ACTIVE_NES_BANK
+  AND #$0F
+  INC
+  ORA #$A0
+  jmp @active_rewrite_return
 
 ; FE9E - Bankswap 0x0000 Vram (Sprites)
   STA BANK_SWITCH_CTRL_SPRITE_BANK
@@ -2336,13 +2350,17 @@ STA VMDATAL ; Ppu_Data2007
   RTS
 
 
-  STA ACTIVE_NES_BANK
-  ; hopefully I can get away with this, otherwise I need to find another byte
-  ;SEI
-  LDA PPU_CONTROL_STATE
-  PHA
-  JSR $FE6A
-  LDA ACTIVE_NES_BANK
+   jmp @active_bank_rewrite
+  ; STA ACTIVE_NES_BANK
+  ; SEI
+  ;  LDA PPU_CONTROL_STATE
+  ;  PHA
+  ; JSR $FE6A
+  ; LDA ACTIVE_NES_BANK
+  ; INC
+  ; ORA #$A0
+@active_rewrite_return:
+  nops 12
 
 ;   STA $FFFF
 ;   LSR
@@ -2354,10 +2372,9 @@ STA VMDATAL ; Ppu_Data2007
 ;   LSR
 ;   STA $FFFF
 
-  INC
-  ORA #$A0
   PHA
   PLB
+
   STA BANK_SWITCH_DB
   LDA #<@bank_switch_jump
   STA BANK_SWITCH_LB

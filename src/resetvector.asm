@@ -21,10 +21,12 @@ nmi:
 
     ; sometimes the NES doesn't RTI, so we're going to set defaults for when it does that here
     jslb set_scrolling_hdma_defaults, $a0
+    jslb dma_oam_table_long, $a0
 
     ; jump to NES NMI
     CLC
     LDA ACTIVE_NES_BANK
+    AND #$0F
     INC
     ADC #$A0
     STA BANK_SWITCH_DB    
@@ -51,11 +53,9 @@ return_from_nes_nmi:
     ; jslb check_and_copy_column_attributes_to_buffer, $a0
     ; jslb check_and_copy_nes_attribute_buffer_long, $a0
     jslb check_and_copy_dma_buffers_long, $a0
-
     jslb snes_nmi, $a0
     jslb translate_8by8only_nes_sprites_to_oam, $a0
 
-    
     PLY
     PLX
     PLA

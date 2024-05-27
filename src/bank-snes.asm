@@ -171,7 +171,7 @@ initialize_registers:
   STA MEMSEL
 ; Use #$04 to enable overscan if we can.
   LDA #$04
-  LDA #$00
+  ; LDA #$00
   STA SETINI
 
 
@@ -224,6 +224,15 @@ intro_done:
     jslb update_values_for_ppu_mask, $a0
     jslb infidelitys_scroll_handling, $a0
     ; jslb update_screen_scroll, $a0 
+
+    LDA BANK_SWITCH_CTRL_REGS
+    AND #$01
+    BNE :+
+    STZ HDMAEN
+    jslb mode_b_scrolling_update, $a0
+    RTL
+    :
+
     jslb setup_hdma, $a0
 
     LDA #$7E
@@ -244,8 +253,7 @@ intro_done:
     ORA HDMA_ENABLED_STATE
     STA HDMAEN
     STA HDMA_ENABLED_STATE
-
-    JSR dma_oam_table    
+ 
     RTL
 
 clear_bg_jsl:
@@ -397,6 +405,8 @@ clear_bg_vm:
 ;   jslb reset_inidisp, $a0 
 
 ;   RTS
+
+
 
 clear_zp:
   LDA #$00

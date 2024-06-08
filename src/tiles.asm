@@ -44,14 +44,6 @@ bankswap_table:
 ; bank #$20, my basic intro tiles
 .byte <(basic_intro_tiles), >(basic_intro_tiles), $B0
 
-; banks of msu tiles for the video
-.if ENABLE_MSU = 1
-  .byte <(msu_intro_tiles_0), >(msu_intro_tiles_0), $B1
-  .byte <(msu_intro_tiles_1), >(msu_intro_tiles_1), $B1
-  .byte <(msu_intro_tiles_2), >(msu_intro_tiles_2), $B1
-  .byte <(msu_intro_tiles_3), >(msu_intro_tiles_3), $B1
-.endif
-
 : RTL
 check_for_chr_bankswap:
 

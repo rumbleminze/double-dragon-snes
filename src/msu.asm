@@ -329,8 +329,6 @@ msu_track_volume:
 
 
 .include "msu_intro_screen.asm"
-.include "chrom-tiles-msu-intro.asm"
-
 
 .if ENABLE_MSU_MOVIE = 1
     .include "msu_video_player.asm"

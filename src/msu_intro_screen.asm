@@ -67,7 +67,7 @@ do_intro:
 setup_intro_bg1:
   LDA #$03
   STA BGMODE
-    LDA #$40
+    LDA #$70
     STA BG1SC
     LDA #$50
     STA BG2SC
@@ -90,8 +90,10 @@ setup_intro_bg1:
 
     setAXY8
 
-    STZ BG1VOFS
-    STZ BG1VOFS
+    LDA #$FF
+    STA BG1VOFS
+    LDA #$01
+    STA BG1VOFS
     STZ BG1HOFS
     STZ BG1HOFS
 
@@ -200,22 +202,23 @@ write_intro_tiles:
     LDA #$80
     STA VMAIN
     setAXY16
-    LDA #$4000
+    LDA #$7000
     STA VMADDL
 
     LDY #$0000
-:   LDA msu_intro_tilemap, Y
+:   LDA title_bg_tilemap_8bpp, Y
     STA VMDATAL
     INY
     INY
-    CPY #$03A0 * 2
+    CPY #$800
     BNE :-
 
     setAXY8
     rts
 
 write_intro_palette:
-    jsr write_nes_box_pallete
+    ; jsr write_nes_box_pallete
+    jsr write_8bpp_pallete
     rts
 
 write_nes_box_pallete:
@@ -230,46 +233,79 @@ write_nes_box_pallete:
 
     RTS
 
+write_8bpp_pallete:
+  STZ DMAP0
+  LDA #$22
+  STA BBAD0
+  STZ CGADD
+  LDA #^(title_bg_palette_8bpp)
+  STA A1B0
+  LDA #>(title_bg_palette_8bpp)
+  STA A1T0H
+  STZ A1T0L
+  LDA #$02
+  STA DAS0H
+  STZ DAS0L
+  LDA #$01
+  STA MDMAEN
+  rts
+
 
 load_intro_tilesets:
     lda #$00
     sta NMITIMEN
     LDA VMAIN_STATE
-    AND #$0F
+    LDA #$80
     STA VMAIN
     LDA #$8F
     STA INIDISP
     STA INIDISP_STATE
 
-  LDA #$21
-  STA CHR_BANK_BANK_TO_LOAD
-  LDA #$00
-  STA CHR_BANK_TARGET_BANK
-  JSL load_chr_table_to_vm
+    LDA #$01
+    STA DMAP0
+    LDA #$18
+    STA BBAD0
+    LDA #$C6
+    STA A1B0
+    STZ A1T0H
+    STZ A1T0L
+    STZ VMADDH
+    STZ VMADDL
+    LDA #$E0
+    STA DAS0H
+    STZ DAS0L
+    LDA #$01
+    STA MDMAEN
 
-  LDA #$22
-  STA CHR_BANK_BANK_TO_LOAD
-  LDA #$01
-  STA CHR_BANK_TARGET_BANK
-  JSL load_chr_table_to_vm
+;   LDA #$21
+;   STA CHR_BANK_BANK_TO_LOAD
+;   LDA #$00
+;   STA CHR_BANK_TARGET_BANK
+;   JSL load_chr_table_to_vm
 
-  LDA #$23
-  STA CHR_BANK_BANK_TO_LOAD
-  LDA #$02
-  STA CHR_BANK_TARGET_BANK
-  JSL load_chr_table_to_vm
+;   LDA #$22
+;   STA CHR_BANK_BANK_TO_LOAD
+;   LDA #$01
+;   STA CHR_BANK_TARGET_BANK
+;   JSL load_chr_table_to_vm
+
+;   LDA #$23
+;   STA CHR_BANK_BANK_TO_LOAD
+;   LDA #$02
+;   STA CHR_BANK_TARGET_BANK
+;   JSL load_chr_table_to_vm
   
-  LDA #$24
-  STA CHR_BANK_BANK_TO_LOAD
-  LDA #$03
-  STA CHR_BANK_TARGET_BANK
-  JSL load_chr_table_to_vm
+;   LDA #$24
+;   STA CHR_BANK_BANK_TO_LOAD
+;   LDA #$03
+;   STA CHR_BANK_TARGET_BANK
+;   JSL load_chr_table_to_vm
 
-  LDA #$20
-  STA CHR_BANK_BANK_TO_LOAD
-  LDA #$04
-  STA CHR_BANK_TARGET_BANK
-  JSL load_chr_table_to_vm
+;   LDA #$20
+;   STA CHR_BANK_BANK_TO_LOAD
+;   LDA #$04
+;   STA CHR_BANK_TARGET_BANK
+;   JSL load_chr_table_to_vm
 
   rts
     

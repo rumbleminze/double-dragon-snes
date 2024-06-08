@@ -1,3 +1,31 @@
+default_audio_values:
+.byte $20, $08, $00, $00, $20, $08, $00, $00, $20, $00, $00, $00, $00, $00, $00, $00
+
+reset_2a03_audio:
+PHB
+PHA
+PHX
+PHY
+
+LDA #$A0
+PHA
+PLB
+
+LDY #$0F
+:
+  LDA default_audio_values, Y
+  STA SOUND_EMULATOR_BUFFER_START, Y
+  DEY
+  BPL :-
+
+jslb convert_audio, $a0
+
+PLY
+PLX
+PLA
+PLB
+
+
 convert_audio:
   PHX
   PHY

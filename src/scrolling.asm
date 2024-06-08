@@ -1,39 +1,3 @@
-reset_to_stored_screen_offsets:
-  LDA STORED_OFFSETS_SET
-  BEQ :+
-  LDA UNPAUSE_BG1_HOFS_LB
-  STA HOFS_LB
-  LDA UNPAUSE_BG1_HOFS_HB
-  STA HOFS_HB
-  LDA UNPAUSE_BG1_VOFS_LB
-  STA VOFS_LB
-  LDA UNPAUSE_BG1_VOFS_HB
-  ; STA VOFS_HB
-
-  STZ STORED_OFFSETS_SET
-: RTL
-
-no_scroll_screen_enable:
-  LDA HOFS_LB
-  STA UNPAUSE_BG1_HOFS_LB
-  LDA HOFS_HB
-  STA UNPAUSE_BG1_HOFS_HB
-  LDA VOFS_LB
-  STA UNPAUSE_BG1_VOFS_LB
-  LDA VOFS_HB
-  STA UNPAUSE_BG1_VOFS_HB
-
-  STZ HOFS_LB 
-  STZ HOFS_HB 
-  STZ VOFS_LB
-  STZ VOFS_HB
-  INC STORED_OFFSETS_SET
-   
-  lda PPU_CONTROL_STATE
-  AND #$FC                 
-  STA PPU_CONTROL_STATE
-  RTL 
-
 infidelitys_scroll_handling:
 
   LDA PPU_CONTROL_STATE
@@ -79,7 +43,9 @@ infidelitys_scroll_handling:
 : RTL 
 
 mode_b_scrolling_update:
-
+  LDA #$10
+  STA BG1VOFS
+  STZ BG1VOFS
   LDA #111
   STA SCROLL_HDMA_START
   LDA #80
@@ -242,11 +208,16 @@ write_hud_values:
 
   ; this controls if we use 2000 or 2400 for the hud source
   ; we usually use 2400, but if we're scrolling down then we use 2000  
-  LDA $3B
+  LDA $0100
+  CMP #$40
+  BNE :+
+  LDA #$01
+  BRA :++
+: LDA $3B
   AND #$01
   EOR #$01
   
-  INY
+: INY
   STA SCROLL_HDMA_START, Y
 
   LDA #$00
@@ -256,65 +227,3 @@ write_hud_values:
 
   RTL
 
-; copy of 02:AC47
-horizontal_attribute_scroll_handle:
-  JSR nes_02_ada9_copy
-  LDY #$00
-  STZ COL_ATTR_VM_COUNT
-  STZ COL_ATTR_LB_SET
-
-: INC COL_ATTR_VM_COUNT
-  TYA
-  ASL A
-  ASL A
-  ASL A
-  CLC
-  ADC $00
-  STA $03
-  CLC
-  ADC #$C0
-  PHA
-  LDA $1B
-  EOR #$01
-  AND #$01
-  ASL A
-  ASL A
-  ORA #$23  
-  PHA
-  LDA COL_ATTR_LB_SET
-  BNE :+
-  PLA
-  STA COL_ATTR_VM_HB
-  PLA  
-  STA COL_ATTR_VM_LB  
-  INC COL_ATTR_LB_SET
-  BRA :++
-: PLA  
-  PLA
-: LDX $03
-  LDA $03B0,X
-  STA COL_ATTR_VM_START, Y
-  INY
-  CPY #$08
-  BCC :---
-  LDA #$00
-
-  STA COL_ATTR_VM_START, Y
-  INC COL_ATTR_HAS_VALUES
-  ; would normall do this during screen but for now just do it in line
-  JSR convert_column_of_tiles
-
-  RTL
-
-nes_02_ada9_copy:
-  LDA #$00
-  STA $00
-  LDA $FE
-  AND #$E0
-  ASL A
-  ROL $00
-  ASL A
-  ROL $00
-  ASL A
-  ROL $00
-  RTS

@@ -25,8 +25,13 @@ code_values:
 .byte $FF
 
 
+
+check_for_code_input_l:
+    jsr check_for_code_input
+    rtl
+
 check_for_code_input:
-PHA
+    PHA
  ; origingal code
     LDX $FB
     INX

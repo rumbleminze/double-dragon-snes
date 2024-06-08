@@ -171,7 +171,7 @@ initialize_registers:
   STA MEMSEL
 ; Use #$04 to enable overscan if we can.
   LDA #$04
-  ; LDA #$00
+  LDA #$00
   STA SETINI
 
 
@@ -193,7 +193,20 @@ initialize_registers:
   STZ COLUMN_1_DMA
   STZ COLUMN_2_DMA
   JSL upload_sound_emulator_to_spc
-  JSR do_intro
+
+;  .if ENABLE_MSU = 0
+  jsr do_simple_intro
+; .endif
+
+.if ENABLE_MSU = 1
+  LDA $2002
+  CMP #$53
+  BNE :+
+  ; jslb check_for_all_tracks_present, $b2
+  jslb do_intro, $b2
+  :
+.endif
+
 
 intro_done:
   STZ TM      
@@ -218,9 +231,16 @@ intro_done:
 
 
   snes_nmi:
-
-
     LDA RDNMI 
+
+.if ENABLE_MSU = 1
+    ; LDA #$FF
+    ; :		; check msu ready status (required for sd2snes hardware compatibility)
+    ;   bit $2000
+    ;   bvs :-
+    jslb msu_nmi_check, $b2
+.endif
+
     jslb update_values_for_ppu_mask, $a0
     jslb infidelitys_scroll_handling, $a0
     ; jslb update_screen_scroll, $a0 
@@ -479,13 +499,9 @@ msu_movie_rti:
 dma_values:
   .byte $00, $12
 
-.if ENABLE_MSU = 1
-  .include "msu_intro_screen.asm"
-.endif
 
-.if ENABLE_MSU = 0
+
   .include "intro_screen.asm"
-.endif
   .include "input.asm"
   .include "konamicode.asm"
   .include "palette_updates.asm"

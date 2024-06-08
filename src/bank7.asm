@@ -575,7 +575,7 @@ nops 5
   STA VMADDL ; PpuAddr_2006
   INX
   LDA #$FF
-  STA VMDATAL ; PpuData_2007
+  nops 3 ; STA VMDATAL ; PpuData_2007
   STX $E3
   JMP $CBA4
 : INX
@@ -1509,13 +1509,39 @@ nops 5
 ; we'll likely end up doing this in a different way
   RTS
 
-  nops 47
+  nops 21
 
   ; stealing a bunch of nops here for audio
   @audio_hijack_1:
+
+.if ENABLE_MSU = 1
+  jslb msu_check, $b2
+.endif
+.if ENABLE_MSU = 0
+  nops 4
+.endif
+  CMP #$EE
+  BNE :+
+  RTS
+: 
+  STA $0500
+  LDA $0104
+  PHA
+  ; bank switch to bank 5 for audio
+
+  LDA #$05
+  JSR $FEEE
+; audio take-over
+  LDA $0500
+    ; do original audio
     JSR $8000
+    ; convert and run our audio in the 2A03
     jslb convert_audio, $a0
-    JMP @audio_hijack_1_return
+
+    ; bank switch back
+    PLA
+    JSR $FEEE
+    RTS
 
   @audio_hijack_2:
     JSR $8003
@@ -1995,15 +2021,24 @@ STA VMDATAL ; Ppu_Data2007
 .byte $85, $23, $A5, $41, $29, $F0, $18, $65, $23, $85, $23, $38, $E9, $A0, $90, $18
 .byte $85, $23, $E6, $42, $A5, $42, $C9, $0A, $90, $0E, $E6, $40, $A9, $00, $85, $41
 .byte $85, $42, $A9, $1B, $20, $E1, $FB, $60, $A5, $23, $05, $24, $85, $41, $4C, $D7
-.byte $FB, $8D, $00, $05, $AD, $04, $01, $48, $A9, $05, $20, $EE, $FE
+.byte $FB
 
-; audio take-over
-  LDA $0500
-  JSR $8000
-  ; JMP @audio_hijack_1
-@audio_hijack_1_return:
+; FBE1 - Play audio track in A as song
+jmp @audio_hijack_1
+  ; STA $0500
+  nops 20
 
-.byte $68, $20, $EE, $FE, $60, $AD, $04, $01, $48, $A9, $05, $20, $EE
+  ; LDA $0104
+  ; PHA
+  ; LDA #$05
+  ; JSR $FEEE
+  ; LDA $0500
+  ; JSR $8000
+  ; PLA
+  ; JSR $FEEE
+  ; RTS
+
+.byte $AD, $04, $01, $48, $A9, $05, $20, $EE
 
 
 ; FC00 - bank 7
@@ -2050,7 +2085,8 @@ STA VMDATAL ; Ppu_Data2007
 ;   AND #$E7
 ;   STA $FE
 ;   STA PpuMask_2001
-  nops 5
+  nops 1
+  jslb reset_2a03_audio, $a0
   jslb disable_sprites_and_bg_and_store, $a0
 
   RTS

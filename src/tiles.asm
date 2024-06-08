@@ -439,21 +439,21 @@ write_default_tilesets:
     
     LDA #$02
     STA CHR_BANK_BANK_TO_LOAD
-    LDA #$05
-    STA CHR_BANK_TARGET_BANK
-    JSL load_chr_table_to_vm
-        
-    LDA #$03
-    STA CHR_BANK_BANK_TO_LOAD
     LDA #$06
     STA CHR_BANK_TARGET_BANK
     JSL load_chr_table_to_vm
         
-    LDA #$04
-    STA CHR_BANK_BANK_TO_LOAD
-    LDA #$07
-    STA CHR_BANK_TARGET_BANK
-    JSL load_chr_table_to_vm
+    ; LDA #$03
+    ; STA CHR_BANK_BANK_TO_LOAD
+    ; LDA #$06
+    ; STA CHR_BANK_TARGET_BANK
+    ; JSL load_chr_table_to_vm
+        
+    ; LDA #$04
+    ; STA CHR_BANK_BANK_TO_LOAD
+    ; LDA #$07
+    ; STA CHR_BANK_TARGET_BANK
+    ; JSL load_chr_table_to_vm
 
     RTS
 
@@ -462,17 +462,17 @@ write_default_tilesets:
 ; we only use 00, 10, and 11 for sprite locations, which are 00, 04, and 06
 ; if they're all the same it'll not save any time when swapping banks.
 target_obj_banks:
-.byte $00 ; 00 - Sprites
-.byte $00 ; 01 - Sprites
-.byte $00 ; 02 - Sprites
-.byte $00 ; 03 - Sprites
-.byte $00 ; 04 - Sprites
-.byte $00 ; 05 - Sprites
-.byte $00 ; 06 - Sprites
-.byte $00 ; 07 - Sprites
-.byte $00 ; 08 - Sprites
-.byte $00 ; 09 - Sprites
-.byte $00 ; 0A - Sprites
+.byte $00 ; 00 - Sprites William
+.byte $04 ; 01 - Sprites Roper w/barrel
+.byte $06 ; 02 - Sprites Linda
+.byte $00 ; 03 - Sprites Roper w/box
+.byte $04 ; 04 - Sprites Chin
+.byte $06 ; 05 - Sprites Abobo
+.byte $00 ; 06 - Sprites Shadow Boss
+.byte $00 ; 07 - Sprites Girlfriend/Intro
+.byte $00 ; 08 - Sprites Obstacles
+.byte $00 ; 09 - Sprites mode b
+.byte $00 ; 0A - Sprites mode b
 .byte $00 ; 0B - Sprites
 .byte $04 ; 0C - Sprites
 .byte $06 ; 0D - Sprites / Letters

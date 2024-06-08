@@ -12,10 +12,10 @@ translate_8by8only_nes_sprites_to_oam:
     PHA
 
    setXY16
-	LDY #$0000
+	LDY #$0008
 
 sprite_loop:	
-
+  
 	; byte 0, Tile Y position
 	LDA $200,Y
 	STA SNES_OAM_START + 1, y

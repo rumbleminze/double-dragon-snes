@@ -1,6 +1,7 @@
 ; useful build modifications to build with or without things present in the rom
 .define DEBUG_MOD 0
-.define ENABLE_MSU 0
+.define ENABLE_MSU 1
+.define ENABLE_MSU_MOVIE 1
 
 ; These values are almost always used by NES game, but the values will be different
 ; for each game.  They will almost always be in the zero page, or close to it.
@@ -40,6 +41,7 @@ PALETTE_OFFSET      = $08A7
 REUSABLE_CALC_BYTE  = $08A8
 LEVEL_SELECT_INDEX  = $08A9
 CHEATS_ENABLED      = $08AA
+APU_INITIALIZED     = $08AB
 
 CURRENT_ATTRIBUTES  = $08B0
 
@@ -138,7 +140,6 @@ HUD_VOFFS_HDMA_TABLE    = $0F10
 HUD_HOFFS_HDMA_TABLE       = $0F00
 DMA_ENABLED_STATE    = $0EFF
 HDMA_ENABLED_STATE    = $0EFE
-MIRRORING_MODE        = $0108
 
 ATTR2_NES_HAS_VALUES    = $12A0
 ATTR2_NES_VM_ADDR_HB    = $12A1

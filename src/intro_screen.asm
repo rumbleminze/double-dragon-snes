@@ -13,7 +13,7 @@ intro_screen_data:
 .byte $78, $23, $2b, $1e, $2f, $10, $ff ; Version (REV0)
 .byte $ff, $ff
 
-write_intro_palette:
+write_simple_intro_palette:
     STZ CGADD    
     LDA #$00
     STA CGDATA
@@ -128,14 +128,14 @@ write_intro_palette:
     RTS
 
 
-write_intro_tiles:
+write_simple_intro_tiles:
     LDY #$00
 
-next_line:
+:
     ; get starting address
     LDA intro_screen_data, Y
     CMP #$FF
-    BEQ exit_intro_write
+    BEQ :++
 
     PHA
     INY    
@@ -145,117 +145,47 @@ next_line:
     STA VMADDL
     INY
 
-next_tile:
+:
     LDA intro_screen_data, Y
     INY
 
     CMP #$FF
-    BEQ next_line
+    BEQ :--
 
     STA VMDATAL
-    BRA next_tile
+    BRA :-
 
-exit_intro_write:
+:
     RTS
 
-do_intro:
-    JSR load_intro_tilesets
-    JSR write_intro_palette
+do_simple_intro:
+    JSR load_simple_intro_tilesets
+    JSR write_simple_intro_palette
     JSR write_default_palettes
-    JSR write_intro_tiles
-    ; JSR write_intro_sprites
+    JSR write_simple_intro_tiles
 
     LDA #$0F
     STA INIDISP
     LDX #$FF
 
-
+    LDA #240
+    STA $10
 :
-    jsr check_for_code_input
-    ; jsr check_for_sprite_swap
-    ; jsr check_for_msu
-
-    ; check for "start"
-    LDA JOYTRIGGER1
-    AND #$10
-    CMP #$10
-    BNE :-
+:   LDA RDNMI
+    BPL :-
+    DEC $10
+    BNE :--
 
     LDA INIDISP_STATE
     ORA #$8F
     STA INIDISP_STATE
     STA INIDISP
 
-:   RTS
-check_for_sprite_swap:
-
-    LDA JOYTRIGGER1
-    AND #$20
-    CMP #$20
-    BNE :-
-    jsr load_intro_tilesets
-    LDA #$0F
-    STA INIDISP
-:   rts
-check_for_msu:
-    LDA JOYTRIGGER1
-    AND #$01
-    CMP #$01
-    BEQ :+
-    LDA JOYTRIGGER1
-    AND #$02
-    CMP #$02
-    BNE :-
-:   LDA MSU_SELECTED
-    EOR #$01
-    STA MSU_SELECTED
-
-    LDA SNES_OAM_START + (4*9 - 1)
-    EOR #$40
-    STA SNES_OAM_START + (4*9 - 1)
-    JSR dma_oam_table
     RTS
 
-; if a sprite wants to be on the intro screen,
-; can put the data here    
-intro_sprite_info:
-    ; x, y, sprite
-    .byte $80, $30, $00, $00
-    .byte $80, $38, $01, $00
-    .byte $88, $30, $02, $00
-    .byte $88, $38, $03, $00
-    .byte $80, $40, $08, $00
-    .byte $80, $48, $09, $00
-    .byte $88, $40, $0a, $00
-    .byte $88, $48, $0B, $00
-    .byte $80, $78, $54, $40
-    .byte $ff
-
-write_intro_sprites:
-    LDY #$00
-    LDX #$09
-
-:   LDA intro_sprite_info, y
-    STA SNES_OAM_START, y
-    INY
-    LDA intro_sprite_info, y
-    STA SNES_OAM_START, y
-    INY
-    LDA intro_sprite_info, y
-    STA SNES_OAM_START, y
-    INY
-    LDA intro_sprite_info, y
-    STA SNES_OAM_START, y
-    INY
-    DEX
-    BNE :-
-
-    JSR dma_oam_table
-
-    rts
 
 ; loads up the tileset that has the tiles for the intro
-load_intro_tilesets:
+load_simple_intro_tilesets:
     lda #$00
     sta NMITIMEN
     LDA VMAIN_STATE

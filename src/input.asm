@@ -29,5 +29,12 @@ augment_input:
     ORA #$C0
     STA $00
 
+    ; X
+    lda JOYSER0
+    lda JOYSER0
+    AND #$01
+    BEQ :+
+    
+
 :   jsr check_for_code_input_from_ram_values
     RTL

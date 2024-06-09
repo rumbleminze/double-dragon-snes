@@ -202,7 +202,7 @@ initialize_registers:
   LDA $2002
   CMP #$53
   BNE :+
-  ; jslb check_for_all_tracks_present, $b2
+  jslb check_for_all_tracks_present, $b2
   jslb do_intro, $b2
   :
 .endif
@@ -223,7 +223,16 @@ intro_done:
   JSR write_default_tilesets
   ; JSR write_stack_adjustment_routine_to_ram
   ; JSR write_sound_hijack_routine_to_ram
+.if ENABLE_MSU = 1
+  STZ $2000
+  STZ $2002
+  STZ $2003
+  STZ $2004
+  STZ $2005
+  STZ $2006
+  STZ $2007
 
+.endif
   LDA #$A1
   PHA
   PLB 
@@ -254,8 +263,13 @@ intro_done:
     :
 
     jslb setup_hdma, $a0
+    jsr enable_scroll_hdma
+    
+ 
+    RTL
 
-    LDA #$7E
+enable_scroll_hdma:
+  LDA #$7E
     STA A1B3
     LDA #$09
     STA A1T3H
@@ -273,8 +287,15 @@ intro_done:
     ORA HDMA_ENABLED_STATE
     STA HDMAEN
     STA HDMA_ENABLED_STATE
- 
-    RTL
+  RTS
+
+do_critical_snes_nmi_chores:
+  jslb translate_8by8only_nes_sprites_to_oam, $a0
+  jslb update_values_for_ppu_mask, $a0
+  jslb setup_hdma, $a0
+  jsr enable_scroll_hdma
+  RTL
+
 
 clear_bg_jsl:
   jsr clear_bg

@@ -603,8 +603,11 @@ handle_mmc1_control_register:
   CMP #$03
   BNE :+
   LDA #$22
-  STA BG1SC
-  rtl
-: LDA #$21
-  STA BG1SC
+  BRA :++
+: LDA #$21  
+: STA BG1SC
+  STZ $3B
+  LDA PPU_CONTROL_STATE
+  jslb update_ppu_control_values_from_a, $a0
+  jslb set_scrolling_hdma_defaults, $a0
   rtl

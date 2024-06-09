@@ -2070,7 +2070,7 @@ jmp @audio_hijack_1
 ;   ORA #$80
 ;   STA $FF
 ;   STA $2000 ; PpuControl_2000
-  jslb translate_8by8only_nes_sprites_to_oam, $a0
+  jslb do_critical_snes_nmi_chores, $a0
   jslb enable_nmi_and_store, $a0
   nops 1
   

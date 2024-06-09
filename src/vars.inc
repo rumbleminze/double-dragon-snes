@@ -83,7 +83,7 @@ TARGET_BANK_OFFSET  = $0895
 
 ; HDMA for Scrolling, needs ~0x20 bytes
 SCROLL_HDMA_START      = $0900
-HDMA_LINE_CNT          = $09FF
+HDMA_LINE_CNT          = $0969
 
 ; CHR_BANK_WORK
 CHR_BANK_LOADED_TABLE   = $0920

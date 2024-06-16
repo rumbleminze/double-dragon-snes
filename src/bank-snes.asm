@@ -257,9 +257,9 @@ intro_done:
     LDA BANK_SWITCH_CTRL_REGS
     AND #$01
     BNE :+
-    STZ HDMAEN
-    jslb mode_b_scrolling_update, $a0
-    RTL
+      STZ HDMAEN
+      jslb mode_b_scrolling_update, $a0
+      RTL
     :
 
     jslb setup_hdma, $a0

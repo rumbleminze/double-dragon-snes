@@ -4,13 +4,13 @@ intro_screen_data:
 .byte $2b, $2e, $26, $1b, $25, $1e, $26, $22, $27, $33, $1e, $00        ; Rumbleminze, 
 .byte $12, $10, $12, $14, $ff                                           ; 2024
 
-.byte $00, $23, $12, $1a, $10, $13, $00                                 ; 2A03
+.byte $E1, $22, $12, $1a, $10, $13, $00                                 ; 2A03
 .byte $2c, $28, $2e, $27, $1d, $00                                      ; SOUND 
-.byte $1e, $26, $2e, $25, $1a, $2d, $28, $2b, $00                       ; EMULATOR
-.byte $1b, $32, $00                                                     ; BY
+.byte $1e, $26, $2e, $25, $1a, $2d, $28, $2b, $ff                       ; EMULATOR
+.byte $27, $23, $1b, $32, $00                                           ; BY
 .byte $26, $1e, $26, $1b, $25, $1e, $2b, $2c, $ff                       ; MEMBLERS
 
-.byte $78, $23, $2b, $1e, $2f, $10, $ff ; Version (REV0)
+.byte $78, $23, $2b, $1e, $2f, $1B, $ff ; Version (REVB)
 .byte $ff, $ff
 
 write_simple_intro_palette:

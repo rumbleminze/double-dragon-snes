@@ -1,6 +1,6 @@
 .segment "HEADER"
 ;      012345678901234567890      
-.byte "DBL DRAGON SNES REV A" ; ROM name, must be 21 chars
+.byte "DBL DRAGON SNES REV B" ; ROM name, must be 21 chars
        
                 
 .segment "ROMSPEC"

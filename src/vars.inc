@@ -1,7 +1,7 @@
 ; useful build modifications to build with or without things present in the rom
 .define DEBUG_MOD 0
-.define ENABLE_MSU 1
-.define ENABLE_MSU_MOVIE 1
+.define ENABLE_MSU 0
+.define ENABLE_MSU_MOVIE 0
 
 ; These values are almost always used by NES game, but the values will be different
 ; for each game.  They will almost always be in the zero page, or close to it.

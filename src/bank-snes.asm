@@ -86,7 +86,7 @@ initialize_registers:
   STZ SNES_OAM_TRANSLATE_NEEDED
 
   LDA #$FF
-  STA WRIO   
+  STA WRIO
   STZ WRMPYA 
   STZ WRMPYB 
   STZ WRDIVL 
@@ -125,7 +125,7 @@ initialize_registers:
   
   JSR clear_zp 
   JSR clear_buffers
-  
+
   LDA #$20
   STA $00
   JSR clear_bg
@@ -209,6 +209,9 @@ initialize_registers:
 
 
 intro_done:
+  LDA #$A0
+  PHA
+  PLB
   STZ TM      
   STZ TS      
   STZ TMW   
@@ -249,7 +252,7 @@ intro_done:
     ;   bvs :-
     jslb msu_nmi_check, $b2
 .endif
-
+    ; jslb check_for_initial_obj_loads, $a0
     jslb update_values_for_ppu_mask, $a0
     jslb infidelitys_scroll_handling, $a0
     ; jslb update_screen_scroll, $a0 

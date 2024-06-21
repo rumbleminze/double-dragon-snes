@@ -44,89 +44,94 @@ bankswap_table:
 ; bank #$20, my basic intro tiles
 .byte <(basic_intro_tiles), >(basic_intro_tiles), $B0
 
-: RTL
-check_for_chr_bankswap:
 
-  LDA OBJ_CHR_BANK_SWITCH
-  CMP #$FF
-  BEQ :-
-  CMP CHR_BANK_CURR_P1
-  BEQ :-
+.define WILLIAM       $00
+.define ROPER_BARREL  $01
+.define LINDA         $02
+.define ROPER_BOX     $03
+.define CHIN          $04
+.define ABOBO         $05
+.define SHADOW_BOSS   $06
+.define GF_INTRO      $07
+.define OBSTACLES     $08
 
-  LDA OBJ_CHR_BANK_SWITCH
-  STA CHR_BANK_CURR_P1
-  ; LDA #$FF
-  ; STA OBJ_CHR_BANK_SWITCH
-  
+level_tile_initial_loads:
+; Intro
+.byte WILLIAM, LINDA, ROPER_BARREL, ROPER_BOX, ABOBO, GF_INTRO
+; 0 - 0: first part of lvl 1
+; 0 - 1: 2nd part of lvl 1 - same as first part
+; 1 - 0: All of Level 2 - CHIN instead of GF
+.byte WILLIAM, LINDA, ROPER_BARREL, ROPER_BOX, ABOBO, CHIN
+
+; 2 - 0: lvl 3 Forest
+; 2 - 1: lvl 3 Cave 1
+; 2 - 2: lvl 3 Cave 2
+; 2 - 3: lvl 3 Outside Fortress
+; 3 - 0: lvl 4 first part
+; 3 - 1: lvl 4 platforming section
+.byte WILLIAM, LINDA, OBSTACLES, ROPER_BOX, ABOBO, CHIN
+
+; 3 - 2: lvl 4 gauntlet
+.byte WILLIAM, LINDA, SHADOW_BOSS, ROPER_BOX, ABOBO, CHIN
+; 3 - 3: lvl 4 ending
+
+check_for_initial_obj_loads:
+  LDA $3D
+  ASL
+  ASL
+  ASL
+  ASL
+  ORA $3E
+  CMP CURRENT_LVL_OBJ_LOAD
+  BNE :+
+  RTL
+: STA CURRENT_LVL_OBJ_LOAD
+  CMP #$00
+  BEQ load_initial
+  CMP #$10
+  BEQ load_lvl_2
+  CMP #$20
+  BEQ load_lvl_3
+  CMP #$31
+  BEQ load_lvl_4_guantlet
+  RTL
+
+load_initial:
+  LDY #$00
+  BRA load_6_obj_banks
+load_lvl_2:
+  LDY #$06
+  BRA load_6_obj_banks
+load_lvl_3:
+  LDY #$0C
+  BRA load_6_obj_banks
+load_lvl_4_guantlet:
+  LDY #$12
+  BRA load_6_obj_banks
+
+load_6_obj_banks:
   PHB
-  LDA #$A0
-  PHA
+  PHK
   PLB
-
-  ; looks like we need to switch CHR Banks
-  ; we fake this by DMA'ing tiles from the right tileset
-  ; multiply by 3 to get the offset
-  LDA CHR_BANK_CURR_P1
-  ASL A
-  ADC CHR_BANK_CURR_P1
-  TAY
-
-  LDA #$80
-  STA VMAIN
-
-  LDA #$01
-  STA DMAP0
-
-  LDA #$18
-  STA BBAD0
-
-  ; source LB
-  LDA bankswap_table, Y
-  STA A1T0L
-
-  ; source HB
+  STZ NMITIMEN
+  LDX #$06
+: LDA level_tile_initial_loads, Y
+  STA CHR_BANK_BANK_TO_LOAD
+  PHY
+  jslb bankswitch_obj_chr_data, $a0
+  PLY
   INY
-  LDA bankswap_table, y
-  STA A1T0H
-
-  ; source DB
-  INY
-  LDA bankswap_table, y
-  STA A1B0
-
-  ; 0x2000 bytes
-  LDA #$20
-  STA DAS0H
-  STZ DAS0L
-
-  ; page 1 is at $0000
-  LDA #$00
-  STZ VMADDH
-  STZ VMADDL
-
-  LDA DMA_ENABLED_STATE
-  ORA #$01
-  STA MDMAEN
-
+  DEX
+  BNE :-
+: LDA RDNMI
+  BPL :-
+  LDA RDNMI
+  LDA NMITIMEN_STATE
+  STA NMITIMEN
   PLB
-
-  LDA VMAIN_STATE
-  STA VMAIN
+  RTL
 
 : RTL
-
-
-; we'll put the data at $7000 always
-swap_data_bg_chr:
-  LDA BG_CHR_BANK_SWITCH
-  CMP DATA_CHR_BANK_CURR
-  BEQ :-
-  STA DATA_CHR_BANK_CURR
-  LDA #$60
-  STA TARGET_BANK_OFFSET
-  JMP bankswap_start
-
-
 check_for_bg_chr_bankswap:
   LDA BG_CHR_BANK_SWITCH
   CMP #$FF
@@ -154,15 +159,9 @@ bankswap_start:
 : LDA RDNMI
   AND #$80
   BEQ :-
-
-  ; LDA #$80
-  ; STA INIDISP
-  ; STZ TM
   
   LDA BG_CHR_BANK_SWITCH
   STA BG_CHR_BANK_CURR
-  ; LDA #$FF
-  ; STA OBJ_CHR_BANK_SWITCH
 
   PHB
   LDA #$A0
@@ -235,73 +234,27 @@ bankswap_start:
   
   RTL
 
-bankswitch_bg_chr_data:
-  PHB
-  LDA #$A0
-  PHA
-  PLB
-
-  ; bgs are on 1000, 3000, 5000, 7000.
-  LDY #$01
-: LDA CHR_BANK_LOADED_TABLE, y
-  CMP CHR_BANK_BANK_TO_LOAD
-  BEQ switch_bg_to_y
-  CPY #$07
-  BEQ new_bg_bank
-  INY
-  INY
-  BRA :-
-  RTL
-
-new_bg_bank:
-
-  LDA CHR_BANK_BANK_TO_LOAD
-  
-  CMP #$19
-  BPL new_data_bank
-  PLB
-  RTL
-
-switch_bg_to_y:
-  TYA
-  ORA #$10
-  STA BG12NBA
-
-  PLB
-  RTL
-new_data_bank:
-
-  STZ CHR_BANK_TARGET_BANK
-  INC CHR_BANK_TARGET_BANK
-  jslb load_chr_table_to_vm, $a0
-
-  PLB
-  RTL
-
 bankswitch_obj_chr_data:
-  ; this is a hack that happens to work most of the time.
   PHB
   LDA #$A0
   PHA
   PLB
 
   LDY #$00
-: CPY #$02
+: CPY #$01
   BEQ skip_bg_vram
-  CPY #$03
+  CPY #$02
   BEQ skip_bg_vram
   LDA CHR_BANK_LOADED_TABLE, y
   CMP CHR_BANK_BANK_TO_LOAD
   BEQ switch_to_y
-  CPY #$06
+  CPY #$07
   BEQ new_obj_bank
 skip_bg_vram:
-  INY
   INY
   BRA :-
 
 new_obj_bank:
-  ; todo load the bank into 0000, 4000, or 6000
   LDA INIDISP_STATE
   ORA #$80
   STA INIDISP
@@ -334,8 +287,12 @@ switch_to_y:
   ; our target bank is loaded at #$y000
   ; so just update our obj definition to use that for sprites
   TYA
+  STZ OBJ_CHR_HB
+  CLC
   LSR ; for updating obsel, we have to halve y.  
-  STA OBSEL
+  BCC :+
+  INC OBJ_CHR_HB
+: STA OBSEL
   PLB
   RTL
 
@@ -411,42 +368,27 @@ dma_chr_to_vm:
   RTS
 
 write_default_tilesets:
-    LDA #$00
-    STA CHR_BANK_BANK_TO_LOAD
-    LDA #$00
-    STA CHR_BANK_TARGET_BANK
-    JSL load_chr_table_to_vm
-    
-    LDA #$00
-    STA CHR_BANK_BANK_TO_LOAD
-    LDA #$01
-    STA CHR_BANK_TARGET_BANK
-    JSL load_chr_table_to_vm
-
-    LDA #$01
-    STA CHR_BANK_BANK_TO_LOAD
-    LDA #$04
-    STA CHR_BANK_TARGET_BANK
-    JSL load_chr_table_to_vm
-    
-    LDA #$02
-    STA CHR_BANK_BANK_TO_LOAD
-    LDA #$06
-    STA CHR_BANK_TARGET_BANK
-    JSL load_chr_table_to_vm
+    LDA #WILLIAM
+    JSR load_bank_to_default_slot    
+    LDA #ROPER_BOX
+    JSR load_bank_to_default_slot
+    LDA #GF_INTRO
+    JSR load_bank_to_default_slot
+    LDA #LINDA
+    JSR load_bank_to_default_slot
+    LDA #ABOBO
+    JSR load_bank_to_default_slot
+    LDA #ROPER_BARREL
+    JSR load_bank_to_default_slot
         
-    ; LDA #$03
-    ; STA CHR_BANK_BANK_TO_LOAD
-    ; LDA #$06
-    ; STA CHR_BANK_TARGET_BANK
-    ; JSL load_chr_table_to_vm
-        
-    ; LDA #$04
-    ; STA CHR_BANK_BANK_TO_LOAD
-    ; LDA #$07
-    ; STA CHR_BANK_TARGET_BANK
-    ; JSL load_chr_table_to_vm
+    RTS
 
+load_bank_to_default_slot:
+    STA CHR_BANK_BANK_TO_LOAD
+    TAY
+    LDA target_obj_banks, Y
+    STA CHR_BANK_TARGET_BANK
+    JSL load_chr_table_to_vm
     RTS
 
 ; todo update
@@ -455,14 +397,16 @@ write_default_tilesets:
 ; if they're all the same it'll not save any time when swapping banks.
 target_obj_banks:
 .byte $00 ; 00 - Sprites William
-.byte $04 ; 01 - Sprites Roper w/barrel
-.byte $06 ; 02 - Sprites Linda
-.byte $00 ; 03 - Sprites Roper w/box
+.byte $07 ; 01 - Sprites Roper w/barrel
+.byte $05 ; 02 - Sprites Linda
+.byte $03 ; 03 - Sprites Roper w/box
 .byte $04 ; 04 - Sprites Chin
 .byte $06 ; 05 - Sprites Abobo
-.byte $00 ; 06 - Sprites Shadow Boss
-.byte $00 ; 07 - Sprites Girlfriend/Intro
-.byte $00 ; 08 - Sprites Obstacles
+
+.byte $07 ; 06 - Sprites Shadow Boss
+.byte $04 ; 07 - Sprites Girlfriend/Intro
+.byte $07 ; 08 - Sprites Obstacles
+
 .byte $00 ; 09 - Sprites mode b
 .byte $00 ; 0A - Sprites mode b
 .byte $00 ; 0B - Sprites

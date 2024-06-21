@@ -594,7 +594,14 @@
 .byte $00, $FF, $01, $86, $A1, $A7, $A2, $2F, $A3, $00, $00, $00, $00, $02, $1B, $00
 .byte $FF, $01, $86, $A1, $A7, $A2, $33, $A3, $00, $00, $00, $00, $03, $1C, $00, $FF
 .byte $01, $86, $A1, $A7, $A2, $37, $A3, $00, $00, $00, $00, $06, $1D, $00, $FF, $01
-.byte $86, $A1, $A7, $A2, $3B, $A3, $00, $00, $00, $00, $08, $1E, $00, $FF, $01, $86
+.byte $86, $A1, $A7, $A2, $3B, $A3, $00, $00, $00, $00
+
+; which sprite sheet for jimmy (bimmy?), using 8 causes it to load something we don't
+; already have loaded, but it doesn't use any of those sprites AFAICT, so we switch it to 6
+; which is the machine gun guy
+.byte $06 ;  #$08
+
+.byte $1E, $00, $FF, $01, $86
 .byte $A1, $A7, $A2, $3F, $A3, $00, $00, $00, $00, $07, $2D, $FF, $FF, $01, $AD, $A1
 .byte $B7, $A2, $00, $00, $00, $00, $00, $00, $09, $24, $00, $00, $02, $BA, $A1, $00
 .byte $00, $43, $A3, $00, $00, $00, $00, $0A, $25, $00, $00, $02, $BA, $A1, $00, $00
@@ -1053,7 +1060,13 @@
 .byte $B5, $72, $18, $75, $8A, $85, $25, $B5, $7A, $75, $92, $85, $26, $A5, $25, $38
 .byte $E5, $DD, $85, $25, $A5, $26, $E5, $DE, $30, $01, $60, $4C, $D1, $B2, $A5, $47
 .byte $29, $01, $F0, $37, $CE, $19, $05, $F0, $33, $AD, $01, $05, $29, $10, $F0, $2B
-.byte $AD, $01, $05, $29, $0E, $D0, $05, $A9, $1A, $20, $E1, $FB, $A9, $01, $8D, $FD
+.byte $AD, $01, $05, $29, $0E, $D0, $05, $A9, $1A, $20, $E1, $FB
+
+; LDA #$01 - Load OBJ sheet 1 for thumbs up.  We use #$03 instead because it's used
+;            more often
+LDA #$03
+ 
+.byte $8D, $FD
 .byte $04, $A9, $21, $8D, $F5, $04, $A2, $00, $A0, $F0, $BD, $95, $B7, $99, $00, $02
 .byte $C8, $E8, $E0, $10, $90, $F4, $A9, $EC, $8D, $03, $05, $60, $A5, $47, $29, $FE
 .byte $09, $04, $85, $47, $60, $70, $EC, $02, $D0, $70, $ED, $02, $D8, $78, $FC, $02

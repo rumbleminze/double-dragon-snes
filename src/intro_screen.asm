@@ -10,7 +10,7 @@ intro_screen_data:
 .byte $27, $23, $1b, $32, $00                                           ; BY
 .byte $26, $1e, $26, $1b, $25, $1e, $2b, $2c, $ff                       ; MEMBLERS
 
-.byte $78, $23, $2b, $1e, $2f, $1B, $ff ; Version (REVB)
+.byte $78, $23, $2b, $1e, $2f, $1C, $ff ; Version (REVB)
 .byte $ff, $ff
 
 write_simple_intro_palette:
@@ -200,24 +200,6 @@ load_simple_intro_tilesets:
     LDA #$20
     STA CHR_BANK_BANK_TO_LOAD
     LDA #$01
-    STA CHR_BANK_TARGET_BANK
-    JSL load_chr_table_to_vm
-
-    LDA #$00
-    STA CHR_BANK_BANK_TO_LOAD
-    LDA #$00
-    STA CHR_BANK_TARGET_BANK
-    JSL load_chr_table_to_vm
-
-    LDA #$01
-    STA CHR_BANK_BANK_TO_LOAD
-    LDA #$04
-    STA CHR_BANK_TARGET_BANK
-    JSL load_chr_table_to_vm
-    
-    LDA #$02
-    STA CHR_BANK_BANK_TO_LOAD
-    LDA #$05
     STA CHR_BANK_TARGET_BANK
     JSL load_chr_table_to_vm
 

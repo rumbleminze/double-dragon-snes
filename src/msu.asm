@@ -151,8 +151,6 @@ resume_msu:
     LDA msu_track_loops, Y
     STA MSU_CONTROL
     STA MSU_CURR_CTRL
-    BRA fall_through
-
   ; fall through to default
 fall_through:
   PLA

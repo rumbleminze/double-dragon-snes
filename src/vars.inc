@@ -1,7 +1,7 @@
 ; useful build modifications to build with or without things present in the rom
 .define DEBUG_MOD 0
-.define ENABLE_MSU 0
-.define ENABLE_MSU_MOVIE 0
+.define ENABLE_MSU 1
+.define ENABLE_MSU_MOVIE 1
 
 ; These values are almost always used by NES game, but the values will be different
 ; for each game.  They will almost always be in the zero page, or close to it.
@@ -74,12 +74,6 @@ STACK_RETURN_LB    = $0966
 STACK_RETURN_HB    = $0967
 STACK_RETURN_DB    = $0968
 
-OBJ_CHR_BANK_SWITCH = $0890
-BG_CHR_BANK_SWITCH  = $0891
-CHR_BANK_CURR_P1    = $0892
-BG_CHR_BANK_CURR    = $0893
-DATA_CHR_BANK_CURR  = $0894
-TARGET_BANK_OFFSET  = $0895
 
 ; HDMA for Scrolling, needs ~0x20 bytes
 SCROLL_HDMA_START      = $0900
@@ -87,12 +81,22 @@ HDMA_LINE_CNT          = $0969
 
 ; CHR_BANK_WORK
 CHR_BANK_LOADED_TABLE   = $0920
+
+
+OBJ_CHR_BANK_SWITCH = $0890
+BG_CHR_BANK_SWITCH  = $0891
+CHR_BANK_CURR_P1    = $0892
+BG_CHR_BANK_CURR    = $0893
+DATA_CHR_BANK_CURR  = $0894
+TARGET_BANK_OFFSET  = $0895
+OBJ_CHR_HB          = $0896
 CHR_BANK_BANK_TO_LOAD   = $0897
 CHR_BANK_TARGET_BANK    = $0898
 CHR_BANK_NEXT_OBJ_BANK  = $0899
 CHR_BANK_READ_LB        = $089A
 CHR_BANK_READ_HB        = $089B
 CHR_BANK_READ_DB        = $089C
+CURRENT_LVL_OBJ_LOAD= $089D
 
 FULL_ATTRIBUTE_QUARTER_COUNTER = $0930
 FAQ_OFFSET = $0931

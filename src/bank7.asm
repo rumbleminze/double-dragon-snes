@@ -2371,10 +2371,10 @@ jmp @audio_hijack_1
 ;   STA $DFFF
 ;   LSR
 ;   STA $DFFF
-  nops 12
+  nops 8
   STA BG_CHR_BANK_SWITCH
   jslb check_for_bg_chr_bankswap, $a0
-
+  jslb check_for_initial_obj_loads, $a0
 
   PLA
 ;   STA $FF

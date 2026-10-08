@@ -560,7 +560,7 @@
 
   LDA #$01
   STA $7F0002
-  LDA #$80
+  LDA #$81
   STA $4200
   STZ $320B
   STZ $420C

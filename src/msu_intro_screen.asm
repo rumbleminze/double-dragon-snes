@@ -38,6 +38,19 @@ do_intro:
 
 
 :
+     LDA RDNMI
+nmi_wait:
+    LDA RDNMI
+    BPL nmi_wait
+
+    LDX #$04
+    LDY #$00
+waste_loop:
+    DEY
+    BNE waste_loop
+    DEX
+    BNE waste_loop
+
     jsr check_for_input
     ; jsr check_for_sprite_swap
     ; jsr check_for_msu
@@ -252,7 +265,7 @@ write_8bpp_pallete:
 
 
 load_intro_tilesets:
-    lda #$00
+    lda #$01
     sta NMITIMEN
     LDA VMAIN_STATE
     LDA #$80
@@ -283,16 +296,8 @@ load_intro_tilesets:
  check_for_input:
 PHA
 readjoy:
-    lda #$01
-    STA JOYSER0
+    LDA JOY1H
     STA buttons
-    LSR A
-    sta JOYSER0
-loop:
-    lda JOYSER0
-    lsr a
-    rol buttons
-    bcc loop
 
     lda buttons
     ldy JOYPAD1

@@ -113,7 +113,8 @@ load_6_obj_banks:
   PHB
   PHK
   PLB
-  STZ NMITIMEN
+  LDA #$01
+  STA NMITIMEN
   LDX #$06
 : LDA level_tile_initial_loads, Y
   STA CHR_BANK_BANK_TO_LOAD

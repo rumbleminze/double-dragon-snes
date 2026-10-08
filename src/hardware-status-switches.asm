@@ -331,7 +331,9 @@ update_ppu_control_store_to_10:
     STZ VMAIN_STATE
 
     ; disables NMI
-    STZ NMITIMEN_STATE
+    
+    LDA #$01
+    STA NMITIMEN_STATE
     RTL
 
 set_ppu_mask_to_stored_value:

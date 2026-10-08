@@ -43,6 +43,13 @@
 .DEFINE NUM_TRACKS      #$0C
 .DEFINE TRACKS_AVAILABLE $1ff0
 
+wait_a_frame:
+  LDA RDNMI
+: LDA RDNMI
+  BPL :-
+  rts
+
+
 check_for_all_tracks_present:
   PHB
   LDA #$B2
@@ -57,19 +64,23 @@ check_for_all_tracks_present:
 : STZ MSU_VOLUME
   LDY NUM_TRACKS
   INY
-: STZ MSU_CONTROL
-
-; msu_status_check:
-;   LDA MSU_STATUS
-;   AND #$40
-;   BNE msu_status_check
-
+: 
+  jsr wait_a_frame
+  STZ MSU_CONTROL
   DEY
   BMI :+
+  LDA #$00
+  STA TRACKS_AVAILABLE, Y
+
+
   TYA
   STA MSU_TRACK
   STZ MSU_TRACK + 1 
 
+  msu_status_check:
+    LDA MSU_STATUS
+    AND #$40
+    BNE msu_status_check
   ; LDA #$FF
   ; :		; check msu ready status (required for sd2snes hardware compatibility)
   ;   bit MSU_STATUS
@@ -81,6 +92,7 @@ check_for_all_tracks_present:
   BNE :-
   LDA #$01
   STA TRACKS_AVAILABLE, Y
+  
   BRA :-
 : PLB
   RTL

@@ -10,7 +10,7 @@ intro_screen_data:
 .byte $27, $23, $1b, $32, $00                                           ; BY
 .byte $26, $1e, $26, $1b, $25, $1e, $2b, $2c, $ff                       ; MEMBLERS
 
-.byte $78, $23, $2b, $1e, $2f, $1C, $ff ; Version (REVB)
+.byte $78, $23, $2b, $1e, $2f, $1E, $ff ; Version (REVE)
 .byte $ff, $ff
 
 write_simple_intro_palette:
@@ -186,7 +186,7 @@ do_simple_intro:
 
 ; loads up the tileset that has the tiles for the intro
 load_simple_intro_tilesets:
-    lda #$00
+    lda #$01
     sta NMITIMEN
     LDA VMAIN_STATE
     AND #$0F

@@ -79,8 +79,9 @@ initialize_registers:
   STZ CGADSUB
 
   ; STZ SETINI
-  STZ NMITIMEN
-  STZ NMITIMEN_STATE
+  LDA #$01
+  STA NMITIMEN
+  STA NMITIMEN_STATE
   STZ VMAIN_STATE
   
   STZ SNES_OAM_TRANSLATE_NEEDED
@@ -209,6 +210,12 @@ initialize_registers:
 
 
 intro_done:
+
+  ; ensure auto-joy is reset
+  LDA #$01
+  STA NMITIMEN
+  STA NMITIMEN_STATE
+  
   LDA #$A0
   PHA
   PLB
